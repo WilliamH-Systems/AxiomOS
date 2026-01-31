@@ -1,0 +1,22 @@
+[project]
+name = "axiomos"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "chainlit>=1.0",
+    "fastapi>=0.128.0",
+    "groq>=0.30.0,<1.0.0",
+    "langchain>=1.2.7",
+    "langchain-core>=1.2.7",
+    "langchain-groq>=1.1.1",
+    "langgraph>=1.0.7",
+    "langsmith>=0.6.4",
+    "psycopg2-binary>=2.9.11",
+    "pydantic>=2.12.5",
+    "python-dotenv>=1.2.1",
+    "redis>=7.1.0",
+    "sqlalchemy>=2.0.46",
+    "uvicorn>=0.40.0",
+]
