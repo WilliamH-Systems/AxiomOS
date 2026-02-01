@@ -31,28 +31,35 @@ In your Render dashboard, configure these environment variables:
 ### Required
 - `GROQ_API_KEY`: Your Groq API key from [groq.com](https://groq.com)
 
+### Database & Cache (Required for Full Functionality)
+
+#### Create Required Services First:
+
+**1. PostgreSQL Database**
+- Service Type: PostgreSQL
+- Name: `axiomos-db`
+- Database: `axiomos`
+- User: `axiomos_user`
+- Version: 18 (Latest)
+
+**2. Key-Value Store (Redis Alternative)**
+- Service Type: Key-Value
+- Name: `axiomos-redis`
+- Plan: Free
+
+#### Then Add Environment Variables:
+```bash
+# Get these from your service dashboards
+DATABASE_URL=postgresql://axiomos_user:password@internal-host:5432/axiomos
+KV_URL=redis://:password@internal-host:6379
+```
+
 ### Optional (but Recommended)
 - `GROQ_MODEL`: `llama-3.1-8b-instant` (default)
 - `GROQ_MAX_TOKENS`: `1000` (default)
 - `GROQ_TEMPERATURE`: `0.7` (default)
 - `LOG_LEVEL`: `INFO` (default)
 - `CORS_ORIGINS`: `https://your-app-name.onrender.com` (for security)
-
-### Database (Optional)
-If you add PostgreSQL and Redis services on Render:
-
-**PostgreSQL:**
-- `DB_HOST`: Auto-provided by Render
-- `DB_PORT`: `5432`
-- `DB_NAME`: `axiomos`
-- `DB_USER`: Auto-provided by Render
-- `DB_PASSWORD`: Auto-provided by Render
-
-**Redis:**
-- `REDIS_HOST`: Auto-provided by Render
-- `REDIS_PORT`: `6379`
-- `REDIS_DB`: `0`
-- `REDIS_PASSWORD`: Auto-provided by Render
 
 ## 📁 Project Structure
 
@@ -111,9 +118,9 @@ python fastapi_app.py
 - `gemma2-9b-it`: Google model option
 
 ### Scaling
-- **Starter Plan**: Good for testing and light use
+- **Free Plan**: Good for testing and light use
 - **Standard Plan**: Recommended for production
-- Add Redis/PostgreSQL for persistent storage
+- Add PostgreSQL and Key-Value for persistent storage
 
 ## 🔍 API Endpoints
 
@@ -124,6 +131,7 @@ All original API endpoints are available:
 - `POST /chat` - Non-streaming chat
 - `POST /chat/stream` - Streaming chat
 - `GET /config` - Current configuration
+- `GET /debug-env` - Environment variable debugging
 - Session and memory management endpoints
 
 ## 🚨 Troubleshooting
@@ -133,14 +141,45 @@ All original API endpoints are available:
 1. **Build Fails**: Check `requirements.txt` matches dependencies
 2. **404 Errors**: Ensure static files are included in git
 3. **CORS Issues**: Set `CORS_ORIGINS` to your Render URL
-4. **Database Errors**: PostgreSQL/Redis are optional, app will fallback
-5. **Memory Issues**: Add Redis service for session persistence
+4. **Database Connection Errors**: Ensure PostgreSQL service is connected
+5. **Redis Connection Errors**: Ensure Key-Value store service is connected
 
-### Logs and Monitoring
+### Environment Variable Debugging
 
-- Check Render logs for deployment issues
-- Use `/health` endpoint to monitor status
-- Monitor memory usage on Render dashboard
+If services aren't connecting properly:
+```bash
+# Check environment variables
+curl https://your-app.onrender.com/debug-env | python -m json.tool
+```
+
+Expected output when properly configured:
+```json
+{
+  "database_url_provided": true,
+  "kv_url_provided": true,
+  "database_config": true,
+  "redis_config": true,
+  "overall": "healthy"
+}
+```
+
+### Health Check Endpoint
+
+Monitor service health:
+```bash
+curl https://your-app.onrender.com/health
+```
+
+Expected healthy response:
+```json
+{
+  "status": "healthy",
+  "database": true,
+  "redis": true,
+  "groq_api": true,
+  "overall": "healthy"
+}
+```
 
 ## 🔄 Updates and Maintenance
 
@@ -153,14 +192,16 @@ git push origin web-service
 # Render will auto-deploy
 ```
 
-### Database Migrations
-- Schema changes require manual migration
-- Backup data before major updates
-- Test in staging first
+### Service Dependencies
+
+If services become disconnected:
+1. Go to Web Service → Dependencies
+2. Reconnect PostgreSQL and Key-Value services
+3. Render will update environment variables automatically
 
 ## 💡 Tips
 
-1. **Start Simple**: Deploy without databases first
+1. **Start Simple**: Deploy web service first, then add databases
 2. **Monitor Usage**: Check Render metrics regularly
 3. **Security**: Set specific CORS origins in production
 4. **Backups**: Enable Render database backups if using PostgreSQL
@@ -174,6 +215,26 @@ git push origin web-service
 
 ---
 
+## 🎯 Complete Setup Checklist
+
+### ✅ Prerequisites
+- [ ] Web service created from `web-service` branch
+- [ ] PostgreSQL service created (`axiomos-db`)
+- [ ] Key-Value store created (`axiomos-redis`)
+- [ ] `DATABASE_URL` environment variable set
+- [ ] `KV_URL` environment variable set
+- [ ] `GROQ_API_KEY` environment variable set
+
+### ✅ Verification
+- [ ] App deploys successfully
+- [ ] `/health` endpoint returns `"overall": "healthy"`
+- [ ] `/debug-env` shows `database_url_provided: true`
+- [ ] Web interface loads correctly
+- [ ] Chat functionality works
+- [ ] Session persistence works
+
+---
+
 Your AxiomOS web service will be available at: `https://your-app-name.onrender.com`
 
-🎉 **You're ready to deploy!**
+🎉 **You're ready to deploy with full functionality!**
