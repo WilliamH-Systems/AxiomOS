@@ -12,7 +12,7 @@ services:
     # Environment variables (these will be set in Render dashboard)
     envVars:
       - key: PYTHON_VERSION
-        value: 3.13
+        value: 3.13.0
       - key: UV_LOCK_VERSION
         value: "1"
       - key: GROQ_API_KEY
