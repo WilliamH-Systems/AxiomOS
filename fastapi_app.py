@@ -89,23 +89,40 @@ async def health_check():
         "database": False,
         "redis": False,
         "groq_api": bool(config.groq.api_key),
+        "database_config": config.database.is_using_url(),
+        "redis_config": config.redis.is_using_url(),
     }
 
     # Check database
     try:
         db_manager.create_tables()
-        health_status["database"] = True
-    except:
-        pass
+        health_status["database"] = db_manager.is_healthy()
+    except Exception as e:
+        print(f"Health check database error: {e}")
+        health_status["database"] = False
 
     # Check Redis
     try:
         health_status["redis"] = redis_manager.ping()
-    except:
-        pass
+    except Exception as e:
+        print(f"Health check Redis error: {e}")
+        health_status["redis"] = False
 
-    overall_status = all(health_status.values()) if health_status["groq_api"] else False
-    health_status["overall"] = "healthy" if overall_status else "degraded"
+    # Determine overall status
+    services_healthy = [
+        health_status["database"],
+        health_status["redis"],
+        health_status["groq_api"],
+    ]
+
+    if all(services_healthy):
+        health_status["overall"] = "healthy"
+    elif health_status["groq_api"] and (
+        health_status["database"] or health_status["redis"]
+    ):
+        health_status["overall"] = "degraded"
+    else:
+        health_status["overall"] = "unhealthy"
 
     return health_status
 

@@ -41,40 +41,80 @@ class LongTermMemory(Base):
 
 class DatabaseManager:
     def __init__(self):
-        self.engine = create_engine(
-            f"postgresql://{config.database.username}:{config.database.password}@"
-            f"{config.database.host}:{config.database.port}/{config.database.database}",
-            connect_args={"connect_timeout": 2},  # 2 second timeout
-        )
-        self.SessionLocal = sessionmaker(
-            autocommit=False, autoflush=False, bind=self.engine
-        )
+        self.engine = None
+        self.SessionLocal = None
+        self._initialize_engine()
+
+    def _initialize_engine(self):
+        """Initialize database engine with proper error handling"""
+        try:
+            connection_string = config.database.get_connection_string()
+            self.engine = create_engine(
+                connection_string,
+                connect_args={"connect_timeout": 2},  # 2 second timeout
+            )
+            self.SessionLocal = sessionmaker(
+                autocommit=False, autoflush=False, bind=self.engine
+            )
+            print("✅ Database engine initialized successfully")
+        except Exception as e:
+            print(f"⚠️ Database initialization failed: {e}")
+            self.engine = None
+            self.SessionLocal = None
 
     def create_tables(self):
-        if self.engine:
+        """Create database tables with error handling"""
+        if not self.engine:
+            print("⚠️ Cannot create tables: database not available")
+            return False
+
+        try:
             Base.metadata.create_all(bind=self.engine)
+            print("✅ Database tables created/verified")
+            return True
+        except Exception as e:
+            print(f"⚠️ Database table creation failed: {e}")
+            return False
 
     def get_session(self):
-        # Try to connect on first use
-        if self.SessionLocal is None:
-            try:
-                self.engine = create_engine(
-                    f"postgresql://{config.database.username}:{config.database.password}@"
-                    f"{config.database.host}:{config.database.port}/{config.database.database}",
-                    connect_args={"connect_timeout": 2},  # 2 second timeout
-                )
-                self.SessionLocal = sessionmaker(
-                    autocommit=False, autoflush=False, bind=self.engine
-                )
-            except Exception as e:
-                print(f"Database connection failed: {e}")
+        """Get database session with connection retry"""
+        if not self.SessionLocal:
+            if not self.engine:
+                # Try to initialize again
+                self._initialize_engine()
+
+            if not self.SessionLocal:
+                # Database still not available
+                print("⚠️ Database not available for session creation")
                 raise Exception("Database not available")
 
-        return self.SessionLocal()
+        try:
+            return self.SessionLocal()
+        except Exception as e:
+            print(f"⚠️ Failed to create database session: {e}")
+            raise Exception("Database session creation failed")
 
     def close_session(self, session):
-        if session:
-            session.close()
+        """Close database session safely"""
+        try:
+            if session:
+                session.close()
+        except Exception as e:
+            print(f"⚠️ Error closing database session: {e}")
+
+    def is_healthy(self) -> bool:
+        """Check if database is healthy"""
+        if not self.engine:
+            return False
+
+        try:
+            with self.engine.connect() as conn:
+                from sqlalchemy import text
+
+                conn.execute(text("SELECT 1"))
+            return True
+        except Exception:
+            return False
 
 
 db_manager = DatabaseManager()
