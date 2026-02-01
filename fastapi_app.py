@@ -267,6 +267,29 @@ async def get_config():
     }
 
 
+@app.get("/debug-env")
+async def debug_env():
+    """Debug environment variables for troubleshooting"""
+    import os
+
+    return {
+        "database_url_provided": bool(os.getenv("DATABASE_URL")),
+        "database_url_prefix": os.getenv("DATABASE_URL", "")[:20] + "..."
+        if os.getenv("DATABASE_URL")
+        else None,
+        "redis_url_provided": bool(os.getenv("REDIS_URL")),
+        "redis_url_prefix": os.getenv("REDIS_URL", "")[:20] + "..."
+        if os.getenv("REDIS_URL")
+        else None,
+        "db_host": os.getenv("DB_HOST"),
+        "db_port": os.getenv("DB_PORT"),
+        "redis_host": os.getenv("REDIS_HOST"),
+        "redis_port": os.getenv("REDIS_PORT"),
+        "config_database_url": bool(config.database.database_url),
+        "config_redis_url": bool(config.redis.redis_url),
+    }
+
+
 if __name__ == "__main__":
     # Use Render's port if available, otherwise default to 8000
     port = int(os.getenv("PORT", 8000))
