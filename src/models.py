@@ -147,7 +147,7 @@ class UserModel(BaseModel):
 
 class ConfigModel(BaseModel):
     groq_api_key: str = Field(..., description="Groq API key")
-    groq_model: str = Field(default="llama3-8b-8192", description="Groq model to use")
+    groq_model: str = Field(default="llama-3.3-70b-versatile", description="Groq model to use")
     max_tokens: int = Field(
         default=1000, ge=1, le=4000, description="Maximum tokens for response"
     )
