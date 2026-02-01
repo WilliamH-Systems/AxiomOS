@@ -292,6 +292,8 @@ Your response must be exactly one of the three formats above.
                     .delete()
                 )
                 db_session.commit()
+                # Clear the agent's long_term_memory state to reflect deletion
+                state.long_term_memory = {}
                 state.context["delete_result"] = (
                     f"Successfully deleted {deleted_count} memories."
                 )
@@ -322,6 +324,9 @@ Your response must be exactly one of the three formats above.
                 db_session.commit()
 
                 if deleted_count > 0:
+                    # Remove the deleted memory from the agent's state
+                    if memory_key in state.long_term_memory:
+                        del state.long_term_memory[memory_key]
                     state.context["delete_result"] = (
                         f"Successfully deleted memory '{memory_key}'."
                     )
