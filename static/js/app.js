@@ -16,6 +16,7 @@ class AxiomOSChat {
         this.loadSettings();
         this.checkHealth();
         this.autoResizeTextarea();
+        this.addEnhancedInteractions();
     }
 
     bindEvents() {
@@ -62,6 +63,61 @@ class AxiomOSChat {
             if (e.target.id === 'settingsModal') {
                 document.getElementById('settingsModal').style.display = 'none';
             }
+        });
+    }
+
+    addEnhancedInteractions() {
+        // Add ripple effect to buttons
+        document.querySelectorAll('.btn').forEach(button => {
+            button.addEventListener('click', (e) => this.createRipple(e));
+        });
+
+        // Add floating animation to messages
+        this.observeMessages();
+    }
+
+    createRipple(event) {
+        const button = event.currentTarget;
+        const ripple = document.createElement('span');
+        const rect = button.getBoundingClientRect();
+        const size = Math.max(rect.width, rect.height);
+        const x = event.clientX - rect.left - size / 2;
+        const y = event.clientY - rect.top - size / 2;
+
+        ripple.style.cssText = `
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.5);
+            transform: scale(0);
+            animation: ripple 0.6s linear;
+            width: ${size}px;
+            height: ${size}px;
+            left: ${x}px;
+            top: ${y}px;
+            pointer-events: none;
+        `;
+
+        button.style.position = 'relative';
+        button.style.overflow = 'hidden';
+        button.appendChild(ripple);
+
+        setTimeout(() => {
+            ripple.remove();
+        }, 600);
+    }
+
+    observeMessages() {
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.animation = 'slideInUp 0.3s ease-out';
+                }
+            });
+        }, { threshold: 0.1 });
+
+        // Observe all existing and new messages
+        document.querySelectorAll('.message').forEach(message => {
+            observer.observe(message);
         });
     }
 
