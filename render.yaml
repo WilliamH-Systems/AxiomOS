@@ -2,31 +2,33 @@ services:
   # PostgreSQL Database
   - type: postgres
     name: axiomos-db
-    plan: starter
+    plan: free
     databaseName: axiomos
     user: axiomos_user
     
   # Redis Cache
   - type: redis
     name: axiomos-redis
-    plan: starter
+    plan: free
     
   # Web Service - AxiomOS with Frontend
   - type: web
     name: axiomos-web
     env: python
     runtime: uv
-    plan: starter
+    plan: free
     buildCommand: "uv sync --frozen && uv cache prune --ci"
     startCommand: "uv run python fastapi_app.py"
     healthCheckPath: /health
     
-    # Environment variables (auto-connected to services)
     envVars:
+      # Python configuration
       - key: PYTHON_VERSION
         value: 3.13.0
       - key: UV_LOCK_VERSION
         value: "1"
+      
+      # Groq API configuration
       - key: GROQ_API_KEY
         sync: false
       - key: GROQ_MODEL
@@ -36,7 +38,7 @@ services:
       - key: GROQ_TEMPERATURE
         value: "0.7"
       
-      # PostgreSQL - Auto-connected to axiomos-db
+      # PostgreSQL connection (auto from service)
       - key: DB_HOST
         fromDatabase:
           name: axiomos-db
@@ -56,7 +58,7 @@ services:
           name: axiomos-db
           property: password
       
-      # Redis - Auto-connected to axiomos-redis
+      # Redis connection (auto from service)
       - key: REDIS_HOST
         fromService:
           type: redis
