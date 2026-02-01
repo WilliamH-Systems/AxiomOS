@@ -1,4 +1,16 @@
 services:
+  # PostgreSQL Database
+  - type: postgres
+    name: axiomos-db
+    plan: starter
+    databaseName: axiomos
+    user: axiomos_user
+    
+  # Redis Cache
+  - type: redis
+    name: axiomos-redis
+    plan: starter
+    
   # Web Service - AxiomOS with Frontend
   - type: web
     name: axiomos-web
@@ -9,7 +21,7 @@ services:
     startCommand: "uv run python fastapi_app.py"
     healthCheckPath: /health
     
-    # Environment variables (these will be set in Render dashboard)
+    # Environment variables (auto-connected to services)
     envVars:
       - key: PYTHON_VERSION
         value: 3.13.0
@@ -24,27 +36,41 @@ services:
       - key: GROQ_TEMPERATURE
         value: "0.7"
       
-      # PostgreSQL (optional - will use fallback if not configured)
+      # PostgreSQL - Auto-connected to axiomos-db
       - key: DB_HOST
-        sync: false
+        fromDatabase:
+          name: axiomos-db
+          property: host
       - key: DB_PORT
         value: "5432"
       - key: DB_NAME
-        value: axiomos
+        fromDatabase:
+          name: axiomos-db
+          property: database
       - key: DB_USER
-        sync: false
+        fromDatabase:
+          name: axiomos-db
+          property: user
       - key: DB_PASSWORD
-        sync: false
+        fromDatabase:
+          name: axiomos-db
+          property: password
       
-      # Redis (optional - will use fallback if not configured)
+      # Redis - Auto-connected to axiomos-redis
       - key: REDIS_HOST
-        sync: false
+        fromService:
+          type: redis
+          name: axiomos-redis
+          property: host
       - key: REDIS_PORT
         value: "6379"
       - key: REDIS_DB
         value: "0"
       - key: REDIS_PASSWORD
-        sync: false
+        fromService:
+          type: redis
+          name: axiomos-redis
+          property: password
       
       # Production settings
       - key: SESSION_TIMEOUT
