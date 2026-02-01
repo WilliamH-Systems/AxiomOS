@@ -202,9 +202,65 @@ class AxiomOSAgent:
 
             # Handle special commands
             if state.context.get("processing_recall"):
-                memory_info = (
-                    f"\\n\\nAvailable memories: {list(state.long_term_memory.keys())}"
-                )
+                if state.long_term_memory:
+                    memory_content = []
+                    for key, value in state.long_term_memory.items():
+                        try:
+                            import json
+
+                            if isinstance(value, str):
+                                try:
+                                    parsed_value = json.loads(value)
+                                    if (
+                                        isinstance(parsed_value, dict)
+                                        and "messages" in parsed_value
+                                    ):
+                                        messages = parsed_value["messages"]
+                                        # Format messages nicely
+                                        if messages:
+                                            msg_texts = []
+                                            for msg in messages:
+                                                if isinstance(msg, str):
+                                                    msg_texts.append(f'"{msg}"')
+                                                elif (
+                                                    isinstance(msg, dict)
+                                                    and "content" in msg
+                                                ):
+                                                    msg_texts.append(
+                                                        f'"{msg["content"]}"'
+                                                    )
+                                            memory_content.append(
+                                                f"Memory '{key}': {', '.join(msg_texts)}"
+                                            )
+                                        else:
+                                            memory_content.append(
+                                                f"Memory '{key}': [empty conversation]"
+                                            )
+                                    else:
+                                        memory_content.append(
+                                            f"Memory '{key}': {value}"
+                                        )
+                                except json.JSONDecodeError:
+                                    memory_content.append(f"Memory '{key}': {value}")
+                            else:
+                                memory_content.append(f"Memory '{key}': {value}")
+                        except Exception as e:
+                            memory_content.append(
+                                f"Memory '{key}': Error reading content - {e}"
+                            )
+
+                    if memory_content:
+                        memory_info = (
+                            "\\n\\nHere's what I remember about you:\\n"
+                            + "\\n".join(memory_content)
+                        )
+                    else:
+                        memory_info = (
+                            "\\n\\nI found memories but couldn't extract their content."
+                        )
+                else:
+                    memory_info = "\\n\\nI don't have any memories stored about you."
+
                 response += memory_info
             elif state.context.get("processing_remember"):
                 response = "I've saved our conversation to your long-term memory."
@@ -235,8 +291,49 @@ class AxiomOSAgent:
             conversation_context = []
 
             if state.long_term_memory:
-                memory_keys = list(state.long_term_memory.keys())[:5]
-                memory_summary = f"User's long-term memories: {memory_keys}"
+                # Build better memory context for streaming
+                memory_content = []
+                for key, value in list(state.long_term_memory.items())[:5]:
+                    try:
+                        import json
+
+                        if isinstance(value, str):
+                            try:
+                                parsed_value = json.loads(value)
+                                if (
+                                    isinstance(parsed_value, dict)
+                                    and "messages" in parsed_value
+                                ):
+                                    messages = parsed_value["messages"]
+                                    if messages:
+                                        msg_texts = []
+                                        for msg in messages:
+                                            if isinstance(msg, str):
+                                                msg_texts.append(f'"{msg}"')
+                                            elif (
+                                                isinstance(msg, dict)
+                                                and "content" in msg
+                                            ):
+                                                msg_texts.append(f'"{msg["content"]}"')
+                                        memory_content.append(
+                                            f"{key}: {', '.join(msg_texts)}"
+                                        )
+                                    else:
+                                        memory_content.append(f"{key}: [empty]")
+                                else:
+                                    memory_content.append(
+                                        f"{key}: {str(value)[:100]}..."
+                                    )
+                            except json.JSONDecodeError:
+                                memory_content.append(f"{key}: {str(value)[:100]}...")
+                        else:
+                            memory_content.append(f"{key}: {str(value)[:100]}...")
+                    except Exception:
+                        memory_content.append(f"{key}: [error reading]")
+
+                memory_summary = (
+                    f"User's long-term memories: {'; '.join(memory_content)}"
+                )
                 conversation_context.append(
                     {"role": "system", "content": memory_summary}
                 )
