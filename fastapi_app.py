@@ -90,7 +90,7 @@ async def health_check():
         "redis": False,
         "groq_api": bool(config.groq.api_key),
         "database_config": config.database.is_using_url(),
-        "redis_config": config.redis.is_using_url(),
+        "redis_config": config.redis.is_using_url() or bool(config.redis.kv_url),
     }
 
     # Check database
@@ -281,12 +281,17 @@ async def debug_env():
         "redis_url_prefix": os.getenv("REDIS_URL", "")[:20] + "..."
         if os.getenv("REDIS_URL")
         else None,
+        "kv_url_provided": bool(os.getenv("KV_URL")),
+        "kv_url_prefix": os.getenv("KV_URL", "")[:20] + "..."
+        if os.getenv("KV_URL")
+        else None,
         "db_host": os.getenv("DB_HOST"),
         "db_port": os.getenv("DB_PORT"),
         "redis_host": os.getenv("REDIS_HOST"),
         "redis_port": os.getenv("REDIS_PORT"),
         "config_database_url": bool(config.database.database_url),
         "config_redis_url": bool(config.redis.redis_url),
+        "config_kv_url": bool(config.redis.kv_url),
     }
 
 

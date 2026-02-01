@@ -66,6 +66,9 @@ class RedisConfig:
     # Prioritize REDIS_URL for production (Render)
     redis_url: Optional[str] = os.getenv("REDIS_URL")
 
+    # Support for Render Key-Value Store
+    kv_url: Optional[str] = os.getenv("KV_URL")
+
     # Fallback to individual components for local development
     host: str = os.getenv("REDIS_HOST", "localhost")
     port: int = int(os.getenv("REDIS_PORT", "6379"))
@@ -73,10 +76,16 @@ class RedisConfig:
     password: Optional[str] = os.getenv("REDIS_PASSWORD")
 
     def get_connection_kwargs(self) -> dict:
-        """Get Redis connection kwargs, prioritizing REDIS_URL"""
+        """Get Redis connection kwargs, prioritizing REDIS_URL or KV_URL"""
+        # Try REDIS_URL first (Redis service)
         if self.redis_url:
             print(f"✅ Using REDIS_URL: {self.redis_url[:30]}...")
             return {"use_url": True, "url": self.redis_url}
+
+        # Try KV_URL (Render Key-Value store)
+        if self.kv_url:
+            print(f"✅ Using KV_URL (Render Key-Value): {self.kv_url[:30]}...")
+            return {"use_url": True, "url": self.kv_url}
 
         # Render fallback: try Render-provided individual variables
         render_host = os.getenv("REDIS_HOST")
@@ -95,6 +104,20 @@ class RedisConfig:
                 "retry_on_timeout": True,
                 "health_check_interval": 30,
             }
+
+        # Local development fallback
+        print(f"⚠️ Using localhost Redis (development mode)")
+        return {
+            "host": self.host,
+            "port": self.port,
+            "db": self.db,
+            "password": self.password,
+            "decode_responses": True,
+            "socket_connect_timeout": 5,
+            "socket_timeout": 5,
+            "retry_on_timeout": True,
+            "health_check_interval": 30,
+        }
 
         # Local development fallback
         print(f"⚠️ Using localhost Redis (development mode)")
