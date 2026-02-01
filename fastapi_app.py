@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 from contextlib import asynccontextmanager
+from typing import Optional
 import asyncio
 import json
 import uvicorn
@@ -253,6 +254,48 @@ async def save_memory(user_id: int, key: str, value: str):
             db_session.close()
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to save memory: {str(e)}")
+
+
+@app.delete("/memory/{user_id}")
+async def delete_memory(user_id: int, key: Optional[str] = None):
+    """Delete memory/memories for a user"""
+    try:
+        from src.database import LongTermMemory
+
+        db_session = db_manager.get_session()
+        try:
+            if key:
+                # Delete specific memory
+                deleted_count = (
+                    db_session.query(LongTermMemory)
+                    .filter(
+                        LongTermMemory.user_id == user_id, LongTermMemory.key == key
+                    )
+                    .delete()
+                )
+                if deleted_count > 0:
+                    return {"message": f"Successfully deleted memory '{key}'"}
+                else:
+                    raise HTTPException(
+                        status_code=404, detail=f"Memory '{key}' not found"
+                    )
+            else:
+                # Delete all memories for user
+                deleted_count = (
+                    db_session.query(LongTermMemory)
+                    .filter(LongTermMemory.user_id == user_id)
+                    .delete()
+                )
+                return {"message": f"Successfully deleted {deleted_count} memories"}
+        finally:
+            db_session.commit()
+            db_session.close()
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Failed to delete memory: {str(e)}"
+        )
 
 
 @app.get("/config")

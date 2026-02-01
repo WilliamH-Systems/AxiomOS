@@ -123,6 +123,10 @@ class AxiomOSAgent:
             state.context["processing_remember"] = True
         elif "recall" in last_message.lower():
             state.context["processing_recall"] = True
+        elif "delete" in last_message.lower() and (
+            "memory" in last_message.lower() or "memories" in last_message.lower()
+        ):
+            state.context["processing_delete"] = True
 
         return state
 
@@ -155,6 +159,182 @@ class AxiomOSAgent:
             finally:
                 db_session.close()
 
+        # Process memory deletion requests
+        if state.user_id and state.context.get("processing_delete"):
+            state = self._process_memory_deletion(state)
+
+        return state
+
+    def _process_memory_deletion(self, state: AgentState) -> AgentState:
+        """Carefully process memory deletion requests using Groq AI"""
+        if not state.messages or not state.user_id:
+            return state
+
+        last_message = state.messages[-1]
+
+        # Get current memories for context
+        memories = {}
+        db_session = db_manager.get_session()
+        try:
+            memory_records = (
+                db_session.query(DBMemory)
+                .filter(DBMemory.user_id == state.user_id)
+                .all()
+            )
+
+            for memory in memory_records:
+                if memory.key and memory.value:
+                    memories[memory.key] = memory.value
+
+        finally:
+            db_session.close()
+
+        if not memories:
+            state.context["delete_result"] = "No memories found to delete."
+            return state
+
+        # Use Groq to make an intelligent decision about memory deletion
+        try:
+            memory_list = []
+            for key, value in memories.items():
+                try:
+                    parsed_value = (
+                        json.loads(value) if isinstance(value, str) else value
+                    )
+                    if isinstance(parsed_value, dict) and "messages" in parsed_value:
+                        messages = parsed_value["messages"]
+                        if messages:
+                            msg_summary = "; ".join(str(m)[:100] for m in messages[:3])
+                            memory_list.append(f"{key}: {msg_summary}")
+                        else:
+                            memory_list.append(f"{key}: [empty conversation]")
+                    else:
+                        memory_list.append(f"{key}: {str(value)[:100]}...")
+                except:
+                    memory_list.append(f"{key}: {str(value)[:100]}...")
+
+            memories_text = "\n".join(memory_list)
+
+            # Prompt Groq to decide about deletion
+            decision_prompt = f"""
+You are AxiomOS, a personal assistant. The user wants to delete memories. You must decide this carefully.
+
+Available memories:
+{memories_text}
+
+User request: "{last_message}"
+
+Respond with ONLY ONE of these options:
+1. "DELETE_ALL" - if the user explicitly requests to delete all memories using phrases like "delete all memories", "clear all memories", "remove everything"
+2. "DELETE_SPECIFIC:memory_key_here" - if the user wants to delete a specific memory and clearly identifies it, AND the content seems non-critical or redundant
+3. "DELETE_NONE:safety_concern" - if deletion is unsafe, unclear, could cause data loss, or the memory contains important information
+
+Guidelines:
+- Allow deletion of redundant or trivial conversations (like test messages, simple questions)
+- Protect important personal information, preferences, and meaningful conversations
+- Require explicit language for "delete all" requests
+- Be conservative but reasonable
+
+Your response must be exactly one of the three formats above.
+"""
+
+            chat_completion = self.groq_client.chat.completions.create(
+                model=config.groq.model,
+                messages=[
+                    {
+                        "role": "system",
+                        "content": "You are a careful AI assistant that prioritizes user safety and data integrity.",
+                    },
+                    {"role": "user", "content": decision_prompt},
+                ],
+                max_tokens=50,
+                temperature=0.1,
+                stream=False,
+            )
+
+            decision = chat_completion.choices[0].message.content.strip()
+
+            # Execute the deletion decision
+            if decision.startswith("DELETE_ALL:"):
+                return self._execute_delete_all(state, memories)
+            elif decision.startswith("DELETE_SPECIFIC:"):
+                memory_key = decision.split(":", 1)[1].strip()
+                return self._execute_delete_specific(state, memory_key, memories)
+            elif decision.startswith("DELETE_NONE:"):
+                reason = (
+                    decision.split(":", 1)[1].strip()
+                    if ":" in decision
+                    else "Safety concern"
+                )
+                state.context["delete_result"] = (
+                    f"I cannot delete the memory(ies) because: {reason}"
+                )
+            else:
+                state.context["delete_result"] = (
+                    "I'm not sure how to handle this deletion request. Please be more specific."
+                )
+
+        except Exception as e:
+            state.context["delete_result"] = (
+                f"Error processing deletion request: {str(e)}"
+            )
+
+        return state
+
+    def _execute_delete_all(self, state: AgentState, memories: dict) -> AgentState:
+        """Execute deletion of all memories"""
+        try:
+            db_session = db_manager.get_session()
+            try:
+                deleted_count = (
+                    db_session.query(DBMemory)
+                    .filter(DBMemory.user_id == state.user_id)
+                    .delete()
+                )
+                db_session.commit()
+                state.context["delete_result"] = (
+                    f"Successfully deleted {deleted_count} memories."
+                )
+            finally:
+                db_session.close()
+        except Exception as e:
+            state.context["delete_result"] = f"Failed to delete memories: {str(e)}"
+        return state
+
+    def _execute_delete_specific(
+        self, state: AgentState, memory_key: str, memories: dict
+    ) -> AgentState:
+        """Execute deletion of a specific memory"""
+        if memory_key not in memories:
+            state.context["delete_result"] = f"Memory '{memory_key}' not found."
+            return state
+
+        try:
+            db_session = db_manager.get_session()
+            try:
+                deleted_count = (
+                    db_session.query(DBMemory)
+                    .filter(
+                        DBMemory.user_id == state.user_id, DBMemory.key == memory_key
+                    )
+                    .delete()
+                )
+                db_session.commit()
+
+                if deleted_count > 0:
+                    state.context["delete_result"] = (
+                        f"Successfully deleted memory '{memory_key}'."
+                    )
+                else:
+                    state.context["delete_result"] = (
+                        f"Failed to delete memory '{memory_key}'."
+                    )
+            finally:
+                db_session.close()
+        except Exception as e:
+            state.context["delete_result"] = (
+                f"Failed to delete memory '{memory_key}': {str(e)}"
+            )
         return state
 
     def _respond(self, state: AgentState) -> AgentState:
@@ -264,6 +444,11 @@ class AxiomOSAgent:
                 response += memory_info
             elif state.context.get("processing_remember"):
                 response = "I've saved our conversation to your long-term memory."
+            elif state.context.get("processing_delete"):
+                delete_result = state.context.get(
+                    "delete_result", "Memory deletion request processed."
+                )
+                response = f"{delete_result}"
 
         except Exception as e:
             response = f"I received your message: '{last_message}'. I'm AxiomOS, your personal assistant. (Note: Groq API error: {str(e)})"
