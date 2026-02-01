@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AxiomOS - Personal Assistant</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="chat-container">
+        <header class="chat-header">
+            <div class="header-content">
+                <div class="logo">
+                    <h1>🤖 AxiomOS</h1>
+                    <span class="status online">Online</span>
+                </div>
+                <div class="header-actions">
+                    <button id="clearChatBtn" class="btn btn-secondary">Clear Chat</button>
+                    <button id="settingsBtn" class="btn btn-secondary">⚙️ Settings</button>
+                </div>
+            </div>
+        </header>
+
+        <main class="chat-main">
+            <div class="messages-container" id="messagesContainer">
+                <div class="message assistant">
+                    <div class="message-content">
+                        <div class="message-text">
+                            🤖 **AxiomOS** - Personal Assistant for Organizing Your Life<br><br>
+                            I'm here to help you with intelligent conversations and remember important information. 
+                            Type `remember` followed by something you want me to save, or `recall` to retrieve memories.<br><br>
+                            I'm powered by Groq's fast LLM models and have both session and long-term memory capabilities.
+                        </div>
+                    </div>
+                    <div class="message-time">AxiomOS</div>
+                </div>
+            </div>
+
+            <div class="typing-indicator" id="typingIndicator" style="display: none;">
+                <div class="typing-dots">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            </div>
+        </main>
+
+        <footer class="chat-footer">
+            <div class="input-container">
+                <textarea 
+                    id="messageInput" 
+                    placeholder="Type your message here..." 
+                    rows="1"
+                    maxlength="2000"
+                ></textarea>
+                <button id="sendBtn" class="btn btn-primary">
+                    <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2">
+                        <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="input-info">
+                <span id="charCount">0</span>/2000 • Press Enter to send, Shift+Enter for new line
+            </div>
+        </footer>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>⚙️ Settings</h3>
+                <button class="modal-close" id="closeSettingsBtn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="setting-group">
+                    <label for="modelSelect">Model:</label>
+                    <select id="modelSelect">
+                        <option value="llama-3.1-8b-instant">Llama 3.1 8B Instant</option>
+                        <option value="llama-3.2-3b-preview">Llama 3.2 3B Preview</option>
+                        <option value="gemma2-9b-it">Gemma 2 9B IT</option>
+                    </select>
+                </div>
+                <div class="setting-group">
+                    <label for="temperatureSlider">Temperature: <span id="temperatureValue">0.7</span></label>
+                    <input type="range" id="temperatureSlider" min="0" max="2" step="0.1" value="0.7">
+                </div>
+                <div class="setting-group">
+                    <label for="maxTokensInput">Max Tokens:</label>
+                    <input type="number" id="maxTokensInput" min="100" max="4000" value="1000">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="saveSettingsBtn" class="btn btn-primary">Save Settings</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/app.js"></script>
+</body>
+</html>

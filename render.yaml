@@ -1,0 +1,50 @@
+services:
+  # Web Service - AxiomOS with Frontend
+  - type: web
+    name: axiomos-web
+    env: python
+    plan: starter
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "python fastapi_app.py"
+    healthCheckPath: /health
+    
+    # Environment variables (these will be set in Render dashboard)
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.13
+      - key: GROQ_API_KEY
+        sync: false
+      - key: GROQ_MODEL
+        value: llama-3.1-8b-instant
+      - key: GROQ_MAX_TOKENS
+        value: "1000"
+      - key: GROQ_TEMPERATURE
+        value: "0.7"
+      
+      # PostgreSQL (optional - will use fallback if not configured)
+      - key: DB_HOST
+        sync: false
+      - key: DB_PORT
+        value: "5432"
+      - key: DB_NAME
+        value: axiomos
+      - key: DB_USER
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      
+      # Redis (optional - will use fallback if not configured)
+      - key: REDIS_HOST
+        sync: false
+      - key: REDIS_PORT
+        value: "6379"
+      - key: REDIS_DB
+        value: "0"
+      - key: REDIS_PASSWORD
+        sync: false
+      
+      # Production settings
+      - key: SESSION_TIMEOUT
+        value: "3600"
+      - key: LOG_LEVEL
+        value: INFO

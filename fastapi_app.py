@@ -1,11 +1,13 @@
 from fastapi import FastAPI, HTTPException, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import StreamingResponse
+from fastapi.responses import StreamingResponse, FileResponse
+from fastapi.staticfiles import StaticFiles
 from contextlib import asynccontextmanager
 import asyncio
 import json
 import uvicorn
 from datetime import datetime
+import os
 
 from src.agent import axiom_agent
 from src.models import AgentRequestModel, AgentResponseModel, StreamChunkModel
@@ -46,24 +48,37 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# Add CORS middleware
+# Add CORS middleware - Configure for production
+import os
+
+cors_origins = (
+    os.getenv("CORS_ORIGINS", "*").split(",") if os.getenv("CORS_ORIGINS") else ["*"]
+)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Configure appropriately for production
+    allow_origins=cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
+# Mount static files
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
 
 @app.get("/")
 async def root():
-    """Health check endpoint"""
-    return {
-        "message": "AxiomOS API is running",
-        "version": "1.0.0",
-        "status": "healthy",
-    }
+    """Serve the web interface"""
+    index_path = os.path.join("static", "index.html")
+    if os.path.exists(index_path):
+        return FileResponse(index_path)
+    else:
+        return {
+            "message": "AxiomOS API is running",
+            "version": "1.0.0",
+            "status": "healthy",
+            "note": "Web interface not found. Static files may not be built yet.",
+        }
 
 
 @app.get("/health")
@@ -236,10 +251,13 @@ async def get_config():
 
 
 if __name__ == "__main__":
+    # Use Render's port if available, otherwise default to 8000
+    port = int(os.getenv("PORT", 8000))
+
     uvicorn.run(
         "fastapi_app:app",
         host="0.0.0.0",
-        port=8000,
-        reload=True,
+        port=port,
+        reload=False,  # Disable reload in production
         log_level=config.log_level.lower(),
     )
