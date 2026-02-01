@@ -3,15 +3,18 @@ services:
   - type: web
     name: axiomos-web
     env: python
+    runtime: uv
     plan: starter
-    buildCommand: "pip install -r requirements.txt"
-    startCommand: "python fastapi_app.py"
+    buildCommand: "uv sync --frozen && uv cache prune --ci"
+    startCommand: "uv run python fastapi_app.py"
     healthCheckPath: /health
     
     # Environment variables (these will be set in Render dashboard)
     envVars:
       - key: PYTHON_VERSION
         value: 3.13
+      - key: UV_LOCK_VERSION
+        value: "1"
       - key: GROQ_API_KEY
         sync: false
       - key: GROQ_MODEL
