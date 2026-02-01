@@ -92,17 +92,7 @@ The web service provides:
 - **API Endpoints**: Full REST API available
 - **Mobile Responsive**: Works on all devices
 
-## 🛠️ Development vs Production
-
-### Local Development
-```bash
-# Install dependencies
-pip install -r requirements.txt
-
-# Run locally
-python fastapi_app.py
-# Visit http://localhost:8000
-```
+## 🛠️ Production
 
 ### Production on Render
 - Automatically configured through `render.yaml`
