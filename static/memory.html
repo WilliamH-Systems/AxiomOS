@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AxiomOS - Home</title>
+    <title>AxiomOS - Memory Management</title>
     <link rel="stylesheet" href="/static/css/style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -16,10 +16,10 @@
             <a href="/static/index.html" class="nav-item">
                 💬 Home
             </a>
-            <a href="/static/chat.html" class="nav-item active">
+            <a href="/static/chat.html" class="nav-item">
                 💭 Chat
             </a>
-            <a href="/static/memory.html" class="nav-item">
+            <a href="/static/memory.html" class="nav-item active">
                 🧠 Memory
             </a>
             <a href="/static/settings.html" class="nav-item">
@@ -28,68 +28,76 @@
         </div>
     </nav>
 
-    <!-- Main Content Area -->
+    <!-- Main Container -->
     <div class="main-container">
         <!-- Sidebar Spacer -->
         <div class="sidebar"></div>
         
         <!-- Page Content -->
         <div class="page-content">
-            <h1 class="page-title">✨ Welcome to AxiomOS</h1>
+            <h1 class="page-title">🧠 Memory Management</h1>
             <p class="page-description">
-                Experience the future of AI-powered personal assistance. AxiomOS combines advanced memory management, 
-                intelligent conversations, and cutting-edge technology to help you organize your digital life.
+                View and manage your conversation memories stored by AxiomOS. Search through past interactions 
+                and organize your digital knowledge base with advanced filtering and management tools.
             </p>
             
             <div class="feature-grid">
                 <div class="feature-card">
-                    <div class="feature-icon">💭</div>
-                    <h3 class="feature-title">Intelligent Chat</h3>
+                    <div class="feature-icon">📊</div>
+                    <h3 class="feature-title">Memory Statistics</h3>
                     <p class="feature-text">
-                        Engage in natural conversations powered by Groq's fast LLM models. 
-                        Our AI understands context, remembers important details, and provides thoughtful responses.
+                        Track your memory usage with detailed statistics. 
+                        Monitor stored conversations, recall frequency, and memory growth over time.
                     </p>
                 </div>
                 
                 <div class="feature-card">
-                    <div class="feature-icon">🧠</div>
-                    <h3 class="feature-title">Smart Memory</h3>
+                    <div class="feature-icon">🔍</div>
+                    <h3 class="feature-title">Smart Search</h3>
                     <p class="feature-text">
-                        Advanced memory system with both session-based and long-term storage. 
-                        Remember important information, recall past conversations, and manage your digital knowledge base.
+                        Powerful search functionality to find specific memories quickly. 
+                        Filter by date, content, or context to locate the information you need.
                     </p>
                 </div>
                 
                 <div class="feature-card">
-                    <div class="feature-icon">⚡</div>
-                    <h3 class="feature-title">Lightning Fast</h3>
+                    <div class="feature-icon">📅</div>
+                    <h3 class="feature-title">Timeline View</h3>
                     <p class="feature-text">
-                        Powered by Groq's cutting-edge language models for ultra-fast response times. 
-                        Stream responses in real-time with minimal latency and maximum efficiency.
+                        Chronological organization of all your conversations. 
+                        Browse through your interaction history in an intuitive timeline format.
                     </p>
                 </div>
                 
                 <div class="feature-card">
-                    <div class="feature-icon">🔒</div>
-                    <h3 class="feature-title">Secure & Private</h3>
+                    <div class="feature-icon">🗑️</div>
+                    <h3 class="feature-title">Bulk Management</h3>
                     <p class="feature-text">
-                        Your conversations and memories are encrypted and stored securely. 
-                        Full control over your data with advanced privacy protection and memory management.
+                        Select and delete multiple memories at once. 
+                        Clean up your knowledge base while preserving important information.
                     </p>
                 </div>
+            </div>
+            
+            <div class="feature-card" style="text-align: center;">
+                <p class="feature-text" style="font-size: 1.1rem; margin-bottom: 0;">
+                    <span style="background: linear-gradient(90deg, #00FF7F 0%, #22e9f0 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; filter: drop-shadow(0 2px 8px rgba(0, 255, 127, 0.4));">API Access</span> Available
+                </p>
+                <p class="feature-text" style="margin-top: 1rem;">
+                    Access memory management through our REST API endpoints for programmatic control.
+                </p>
             </div>
         </div>
     </div>
 
     <script>
-        // Add page-specific interactions
         document.addEventListener('DOMContentLoaded', () => {
-            // Add ripple effects to feature cards
+            // Add interactive elements
             document.querySelectorAll('.feature-card').forEach(card => {
                 card.addEventListener('mouseenter', (e) => createRipple(e));
             });
             
-            // Smooth scroll animations
+            // Animate on scroll
             const observer = new IntersectionObserver((entries) => {
                 entries.forEach(entry => {
                     if (entry.isIntersecting) {
