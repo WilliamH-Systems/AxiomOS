@@ -135,11 +135,22 @@
             particlesJS.load('particles.json', (container) => {
                 if (container) {
                     console.log('Particles.js loaded successfully');
+                    console.log('Particles configuration loaded');
+                    console.log('Particle animation initialized');
                 } else {
                     console.error('Particles container not found');
                 }
             });
         });
+    </script>
+    <script>
+        // Fallback particle initialization to ensure particles always load
+        setTimeout(() => {
+            if (typeof particlesJS !== 'undefined') {
+                particlesJS.load('particles.json');
+                console.log('Fallback particle initialization triggered');
+            }
+        }, 1000);
     </script>
     <script>
         // Initialize particles.js for enhanced text rendering
