@@ -50,6 +50,7 @@
 
             <main class="chat-main">
                 <div class="messages-container" id="messagesContainer">
+                    <div id="particles-js"></div>
                     <div class="message assistant">
                         <div class="message-content">
                             <div class="message-text">
@@ -126,5 +127,41 @@
     </div>
 
     <script src="/static/js/app.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
+    <script>
+        // Initialize particles.js for enhanced text rendering
+        document.addEventListener('DOMContentLoaded', () => {
+            particlesJS({
+                target: '.message-text',
+                options: {
+                    color: '#00FF7F',
+                    maxParticles: 50,
+                    sizeVariations: 3,
+                    speed: 0.5,
+                    rotationSpeed: 0.1
+                }
+            });
+
+            // Add particles styling override for better contrast
+            const style = document.createElement('style');
+            style.textContent = `
+                .message-text p {
+                    position: relative;
+                    z-index: 1;
+                }
+                
+                #particles-js {
+                    position: absolute !important;
+                    top: 0 !important;
+                    left: 0 !important;
+                    width: 100% !important;
+                    height: 100% !important;
+                    pointer-events: none !important;
+                    z-index: 0 !important;
+                }
+            `;
+            document.head.appendChild(style);
+        });
+    </script>
 </body>
 </html>
