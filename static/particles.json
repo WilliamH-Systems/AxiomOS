@@ -1,0 +1,111 @@
+{
+  "particles": {
+    "number": {
+      "value": 80,
+      "density": 30,
+      "shape": {
+        "type": "json",
+        "object": {
+          "url": "particlesjs-config.json"
+        }
+      }
+    },
+    "color": {
+      "value": "#00FF7F",
+      "random": false,
+      "animation": {
+        "enable": false,
+        "speed": 1,
+        "opacity_min": 0.4,
+        "opacity_max": 0.8,
+        "h_offset": 100,
+        "sync": false
+      }
+    },
+    "size": {
+      "value": 4,
+      "random": true,
+      "anim": {
+        "enable": true,
+        "speed": 2,
+        "opacity_min": 0.2,
+        "opacity_max": 0.8,
+        "sync": false
+      }
+    },
+    "line_linked": {
+      "enable": true,
+      "distance": 150,
+      "color": "#00FF7F",
+      "opacity": 0.4,
+      "width": 1,
+      "curvature": 0.5
+    },
+    "move": {
+      "enable": true,
+      "speed": 0.3,
+      "direction": "none",
+      "random": true,
+      "straight": false,
+      "out_mode": "out",
+      "bounce": false,
+      "attract": [
+        {
+          "distance": 200,
+          "rotate": true,
+          "parallax": {
+            "enable": true,
+            "strength": 0.5,
+            "smooth": 10
+          }
+        }
+      ]
+    },
+    "rotate": {
+      "enable": true,
+      "speed": 0.1,
+      "random": true,
+      "path": false,
+      "animation": {
+        "enable": false,
+        "speed": 1,
+        "opacity_min": 0.2,
+        "opacity_max": 0.8,
+        "sync": false
+      }
+    },
+    "opacity": {
+      "value": {
+        "min": 0.1,
+        "max": 0.6,
+        "random": false,
+        "animation": {
+          "enable": false,
+          "speed": 1,
+          "opacity_min": 0.2,
+          "opacity_max": 0.8,
+          "sync": false
+        }
+      }
+    },
+    "interactivity": {
+      "detect_on": "canvas",
+      "events": {
+        "onhover": {
+          "enable": true,
+          "mode": "grab",
+          "parallax": {
+            "enable": true,
+            "strength": 1,
+            "smooth": 10
+          }
+        },
+        "onclick": {
+          "enable": true,
+          "mode": "push"
+        },
+        "resize": false
+      }
+    }
+  }
+}
