@@ -8,154 +8,588 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Particles.js CDN -->
+    <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
 </head>
 <body>
+    <!-- Particles.js Background -->
+    <div id="particles-js"></div>
+
     <!-- Floating Navigation Island -->
     <nav class="nav-island">
         <div class="nav-items">
             <a href="/static/index.html" class="nav-item">
-                💬 Home
+                <span>💬</span>
+                <span>Home</span>
             </a>
             <a href="/static/chat.html" class="nav-item">
-                💭 Chat
+                <span>💭</span>
+                <span>Chat</span>
             </a>
             <a href="/static/memory.html" class="nav-item active">
-                🧠 Memory
+                <span>🧠</span>
+                <span>Memory</span>
             </a>
             <a href="/static/settings.html" class="nav-item">
-                ⚙️ Settings
+                <span>⚙️</span>
+                <span>Settings</span>
             </a>
         </div>
     </nav>
 
     <!-- Main Container -->
     <div class="main-container">
-        <!-- Sidebar Spacer -->
-        <div class="sidebar"></div>
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="glass-card">
+                <h3 style="margin-bottom: 1rem; color: var(--text-primary);">🧠 Memory Stats</h3>
+                <div style="color: var(--text-secondary); font-size: 0.9rem; line-height: 1.6;">
+                    <div style="margin-bottom: 0.75rem; display: flex; justify-content: space-between;">
+                        <span>Total Memories:</span>
+                        <span id="totalMemories" style="color: var(--primary-color); font-weight: 600;">0</span>
+                    </div>
+                    <div style="margin-bottom: 0.75rem; display: flex; justify-content: space-between;">
+                        <span>Session Memory:</span>
+                        <span id="sessionMemories" style="color: var(--secondary-color); font-weight: 600;">0</span>
+                    </div>
+                    <div style="margin-bottom: 0.75rem; display: flex; justify-content: space-between;">
+                        <span>Long-term:</span>
+                        <span id="longTermMemories" style="color: var(--accent-color); font-weight: 600;">0</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between;">
+                        <span>Storage Used:</span>
+                        <span id="storageUsed" style="color: var(--text-muted);">0 KB</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="glass-card" style="margin-top: 1.5rem;">
+                <h4 style="margin-bottom: 0.75rem; color: var(--text-primary);">🔍 Search Memory</h4>
+                <input 
+                    type="text" 
+                    id="searchInput" 
+                    placeholder="Search memories..."
+                    style="
+                        width: 100%;
+                        background: rgba(255, 255, 255, 0.05);
+                        border: 1px solid rgba(255, 255, 255, 0.1);
+                        border-radius: var(--radius-md);
+                        padding: 0.75rem;
+                        color: var(--text-primary);
+                        outline: none;
+                        transition: all var(--transition-fast);
+                    "
+                    onkeyup="searchMemories(this.value)"
+                >
+                <div id="searchResults" style="margin-top: 1rem; max-height: 200px; overflow-y: auto;"></div>
+            </div>
+
+            <div class="glass-card" style="margin-top: 1.5rem;">
+                <h4 style="margin-bottom: 0.75rem; color: var(--text-primary);">🏷️ Categories</h4>
+                <div id="categoryList" style="display: flex; flex-direction: column; gap: 0.5rem;">
+                    <!-- Categories will be populated here -->
+                </div>
+            </div>
+
+            <div class="glass-card" style="margin-top: 1.5rem;">
+                <h4 style="margin-bottom: 0.75rem; color: var(--text-primary);">⚡ Quick Actions</h4>
+                <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                    <button onclick="exportMemories()" class="nav-item" style="text-align: left; justify-content: flex-start; padding: 0.75rem;">
+                        📤 Export All
+                    </button>
+                    <button onclick="clearSessionMemory()" class="nav-item" style="text-align: left; justify-content: flex-start; padding: 0.75rem;">
+                        🗑️ Clear Session
+                    </button>
+                    <button onclick="showMemoryStats()" class="nav-item" style="text-align: left; justify-content: flex-start; padding: 0.75rem;">
+                        📊 View Stats
+                    </button>
+                </div>
+            </div>
+        </div>
         
         <!-- Page Content -->
         <div class="page-content">
             <h1 class="page-title">🧠 Memory Management</h1>
             <p class="page-description">
-                View and manage your conversation memories stored by AxiomOS. Search through past interactions 
-                and organize your digital knowledge base with advanced filtering and management tools.
+                Manage your AI's memory system. View, search, and organize both session-based and long-term memories 
+                that help the AI provide personalized and context-aware responses.
             </p>
-            
-            <div class="feature-grid">
-                <div class="feature-card">
-                    <div class="feature-icon">📊</div>
-                    <h3 class="feature-title">Memory Statistics</h3>
-                    <p class="feature-text">
-                        Track your memory usage with detailed statistics. 
-                        Monitor stored conversations, recall frequency, and memory growth over time.
-                    </p>
-                </div>
-                
-                <div class="feature-card">
-                    <div class="feature-icon">🔍</div>
-                    <h3 class="feature-title">Smart Search</h3>
-                    <p class="feature-text">
-                        Powerful search functionality to find specific memories quickly. 
-                        Filter by date, content, or context to locate the information you need.
-                    </p>
-                </div>
-                
-                <div class="feature-card">
-                    <div class="feature-icon">📅</div>
-                    <h3 class="feature-title">Timeline View</h3>
-                    <p class="feature-text">
-                        Chronological organization of all your conversations. 
-                        Browse through your interaction history in an intuitive timeline format.
-                    </p>
-                </div>
-                
-                <div class="feature-card">
-                    <div class="feature-icon">🗑️</div>
-                    <h3 class="feature-title">Bulk Management</h3>
-                    <p class="feature-text">
-                        Select and delete multiple memories at once. 
-                        Clean up your knowledge base while preserving important information.
-                    </p>
-                </div>
+
+            <!-- Memory Type Tabs -->
+            <div style="display: flex; gap: 1rem; margin-bottom: 2rem; justify-content: center; flex-wrap: wrap;">
+                <button onclick="showMemoryType('all')" class="memory-tab active" data-type="all" style="
+                    padding: 0.75rem 1.5rem;
+                    background: var(--glass-bg);
+                    backdrop-filter: var(--backdrop-blur);
+                    border: 1px solid var(--glass-border);
+                    border-radius: var(--radius-full);
+                    color: var(--text-primary);
+                    cursor: pointer;
+                    transition: all var(--transition-fast);
+                    font-weight: 500;
+                ">
+                    All Memories
+                </button>
+                <button onclick="showMemoryType('session')" class="memory-tab" data-type="session" style="
+                    padding: 0.75rem 1.5rem;
+                    background: var(--glass-bg);
+                    backdrop-filter: var(--backdrop-blur);
+                    border: 1px solid var(--glass-border);
+                    border-radius: var(--radius-full);
+                    color: var(--text-primary);
+                    cursor: pointer;
+                    transition: all var(--transition-fast);
+                    font-weight: 500;
+                ">
+                    Session Memory
+                </button>
+                <button onclick="showMemoryType('long_term')" class="memory-tab" data-type="long_term" style="
+                    padding: 0.75rem 1.5rem;
+                    background: var(--glass-bg);
+                    backdrop-filter: var(--backdrop-blur);
+                    border: 1px solid var(--glass-border);
+                    border-radius: var(--radius-full);
+                    color: var(--text-primary);
+                    cursor: pointer;
+                    transition: all var(--transition-fast);
+                    font-weight: 500;
+                ">
+                    Long-term Memory
+                </button>
             </div>
-            
-            <div class="feature-card" style="text-align: center;">
-                <p class="feature-text" style="font-size: 1.1rem; margin-bottom: 0;">
-                    <span style="background: linear-gradient(90deg, #00FF7F 0%, #22e9f0 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; filter: drop-shadow(0 2px 8px rgba(0, 255, 127, 0.4));">API Access</span> Available
+
+            <!-- Memory Grid -->
+            <div class="memory-grid" id="memoryGrid">
+                <!-- Memory cards will be populated here -->
+            </div>
+
+            <!-- Load More Button -->
+            <div style="text-align: center; margin-top: 2rem;">
+                <button onclick="loadMoreMemories()" class="send-button" id="loadMoreBtn" style="display: none;">
+                    Load More Memories
+                </button>
+            </div>
+
+            <!-- Empty State -->
+            <div id="emptyState" class="glass-card" style="text-align: center; padding: 3rem; display: none;">
+                <div style="font-size: 4rem; margin-bottom: 1rem;">🧠</div>
+                <h3 style="color: var(--text-primary); margin-bottom: 1rem;">No Memories Found</h3>
+                <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">
+                    Start chatting with the AI to build up your memory collection. The AI will remember important information 
+                    from your conversations and store it here for easy access.
                 </p>
-                <p class="feature-text" style="margin-top: 1rem;">
-                    Access memory management through our REST API endpoints for programmatic control.
-                </p>
+                <a href="/static/chat.html" class="send-button" style="text-decoration: none;">
+                    Start Chatting
+                </a>
             </div>
         </div>
     </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            // Add interactive elements
-            document.querySelectorAll('.feature-card').forEach(card => {
-                card.addEventListener('mouseenter', (e) => createRipple(e));
-            });
-            
-            // Animate on scroll
-            const observer = new IntersectionObserver((entries) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        entry.target.style.animation = 'slideInUp 0.6s ease-out';
+        // Initialize Particles.js
+        document.addEventListener('DOMContentLoaded', function() {
+            particlesJS('particles-js', {
+                "particles": {
+                    "number": {
+                        "value": 100,
+                        "density": {
+                            "enable": true,
+                            "value_area": 700
+                        }
+                    },
+                    "color": {
+                        "value": "#45e2f2"
+                    },
+                    "shape": {
+                        "type": "circle"
+                    },
+                    "opacity": {
+                        "value": 0.4,
+                        "random": false
+                    },
+                    "size": {
+                        "value": 2.5,
+                        "random": true
+                    },
+                    "line_linked": {
+                        "enable": true,
+                        "distance": 130,
+                        "color": "#d1daff",
+                        "opacity": 0.3,
+                        "width": 1
+                    },
+                    "move": {
+                        "enable": true,
+                        "speed": 2.2,
+                        "direction": "none",
+                        "random": false,
+                        "straight": false,
+                        "out_mode": "out",
+                        "bounce": false
                     }
-                });
-            }, { threshold: 0.1 });
-
-            document.querySelectorAll('.feature-card').forEach(card => {
-                observer.observe(card);
+                },
+                "interactivity": {
+                    "detect_on": "canvas",
+                    "events": {
+                        "onhover": {
+                            "enable": true,
+                            "mode": "repulse"
+                        },
+                        "onclick": {
+                            "enable": false
+                        },
+                        "resize": true
+                    },
+                    "modes": {
+                        "repulse": {
+                            "distance": 100,
+                            "duration": 0.4
+                        }
+                    }
+                },
+                "retina_detect": true
             });
+
+            // Initialize memory management
+            initializeMemory();
         });
 
-        function createRipple(event) {
-            const card = event.currentTarget;
-            const ripple = document.createElement('span');
-            const rect = card.getBoundingClientRect();
-            const size = Math.max(rect.width, rect.height);
-            const x = event.clientX - rect.left - size / 2;
-            const y = event.clientY - rect.top - size / 2;
+        let currentMemoryType = 'all';
+        let memories = [];
+        let filteredMemories = [];
+        let currentPage = 1;
+        const memoriesPerPage = 12;
 
-            ripple.style.cssText = `
-                position: absolute;
-                border-radius: 50%;
-                background: rgba(0, 255, 127, 0.2);
-                transform: scale(0);
-                animation: ripple 0.6s linear;
-                width: ${size}px;
-                height: ${size}px;
-                left: ${x}px;
-                top: ${y}px;
-                pointer-events: none;
-            `;
-
-            card.style.position = 'relative';
-            card.style.overflow = 'hidden';
-            card.appendChild(ripple);
-
-            setTimeout(() => {
-                ripple.remove();
-            }, 600);
+        function initializeMemory() {
+            loadMemories();
+            loadCategories();
+            updateMemoryStats();
+            setupTabStyles();
         }
 
-        // Add ripple animation CSS
-        const style = document.createElement('style');
-        style.textContent = `
-            @keyframes ripple {
-                0% {
-                    transform: scale(0);
-                    opacity: 1;
+        function setupTabStyles() {
+            const tabs = document.querySelectorAll('.memory-tab');
+            tabs.forEach(tab => {
+                tab.addEventListener('mouseenter', function() {
+                    if (!this.classList.contains('active')) {
+                        this.style.background = 'var(--glass-bg-hover)';
+                        this.style.borderColor = 'var(--primary-color)';
+                    }
+                });
+                tab.addEventListener('mouseleave', function() {
+                    if (!this.classList.contains('active')) {
+                        this.style.background = 'var(--glass-bg)';
+                        this.style.borderColor = 'var(--glass-border)';
+                    }
+                });
+            });
+        }
+
+        async function loadMemories() {
+            try {
+                const response = await fetch('/api/memories');
+                if (response.ok) {
+                    memories = await response.json();
+                    filterAndDisplayMemories();
+                } else {
+                    console.error('Failed to load memories');
+                    showEmptyState();
                 }
-                100% {
-                    transform: scale(4);
-                    opacity: 0;
+            } catch (error) {
+                console.error('Error loading memories:', error);
+                showEmptyState();
+            }
+        }
+
+        async function loadCategories() {
+            try {
+                const response = await fetch('/api/memories/categories');
+                if (response.ok) {
+                    const categories = await response.json();
+                    displayCategories(categories);
+                }
+            } catch (error) {
+                console.error('Error loading categories:', error);
+            }
+        }
+
+        function displayCategories(categories) {
+            const categoryList = document.getElementById('categoryList');
+            categoryList.innerHTML = categories.map(category => `
+                <div onclick="filterByCategory('${category.name}')" style="
+                    padding: 0.5rem 0.75rem;
+                    background: rgba(255, 255, 255, 0.05);
+                    border-radius: var(--radius-sm);
+                    cursor: pointer;
+                    transition: all var(--transition-fast);
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                " onmouseover="this.style.background='rgba(255, 255, 255, 0.1)'" 
+                   onmouseout="this.style.background='rgba(255, 255, 255, 0.05)'">
+                    <span style="color: var(--text-secondary); font-size: 0.9rem;">${category.name}</span>
+                    <span style="color: var(--text-muted); font-size: 0.8rem;">${category.count}</span>
+                </div>
+            `).join('');
+        }
+
+        function showMemoryType(type) {
+            currentMemoryType = type;
+            currentPage = 1;
+            
+            // Update tab styles
+            document.querySelectorAll('.memory-tab').forEach(tab => {
+                if (tab.dataset.type === type) {
+                    tab.classList.add('active');
+                    tab.style.background = 'linear-gradient(135deg, rgba(69, 226, 242, 0.2), rgba(209, 218, 255, 0.2))';
+                    tab.style.borderColor = 'var(--primary-color)';
+                } else {
+                    tab.classList.remove('active');
+                    tab.style.background = 'var(--glass-bg)';
+                    tab.style.borderColor = 'var(--glass-border)';
+                }
+            });
+            
+            filterAndDisplayMemories();
+        }
+
+        function filterAndDisplayMemories() {
+            if (currentMemoryType === 'all') {
+                filteredMemories = [...memories];
+            } else {
+                filteredMemories = memories.filter(memory => memory.type === currentMemoryType);
+            }
+            
+            displayMemories();
+            updateMemoryStats();
+        }
+
+        function displayMemories() {
+            const memoryGrid = document.getElementById('memoryGrid');
+            const startIndex = (currentPage - 1) * memoriesPerPage;
+            const endIndex = startIndex + memoriesPerPage;
+            const memoriesToShow = filteredMemories.slice(startIndex, endIndex);
+            
+            if (memoriesToShow.length === 0 && currentPage === 1) {
+                showEmptyState();
+                return;
+            }
+            
+            hideEmptyState();
+            
+            memoryGrid.innerHTML = memoriesToShow.map(memory => `
+                <div class="memory-card" onclick="viewMemoryDetails('${memory.id}')">
+                    <div class="memory-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+                        <span class="memory-type" style="
+                            padding: 0.25rem 0.75rem;
+                            background: ${memory.type === 'session' ? 'rgba(69, 226, 242, 0.2)' : 'rgba(209, 218, 255, 0.2)'};
+                            border-radius: var(--radius-full);
+                            font-size: 0.8rem;
+                            color: ${memory.type === 'session' ? 'var(--primary-color)' : 'var(--secondary-color)'};
+                            font-weight: 500;
+                        ">
+                            ${memory.type === 'session' ? 'Session' : 'Long-term'}
+                        </span>
+                        <button onclick="event.stopPropagation(); deleteMemory('${memory.id}')" style="
+                            background: none;
+                            border: none;
+                            color: var(--text-muted);
+                            cursor: pointer;
+                            font-size: 1.2rem;
+                            padding: 0.25rem;
+                            transition: color var(--transition-fast);
+                        " onmouseover="this.style.color='var(--accent-color)'" 
+                           onmouseout="this.style.color='var(--text-muted)'">
+                            ×
+                        </button>
+                    </div>
+                    
+                    <h3 class="memory-title" style="
+                        font-size: 1.1rem;
+                        font-weight: 600;
+                        margin-bottom: 0.5rem;
+                        color: var(--text-primary);
+                        overflow: hidden;
+                        text-overflow: ellipsis;
+                        white-space: nowrap;
+                    ">
+                        ${memory.title || 'Untitled Memory'}
+                    </h3>
+                    
+                    <div class="memory-content" style="
+                        color: var(--text-secondary);
+                        line-height: 1.5;
+                        margin-bottom: 1rem;
+                        overflow: hidden;
+                        text-overflow: ellipsis;
+                        display: -webkit-box;
+                        -webkit-line-clamp: 3;
+                        -webkit-box-orient: vertical;
+                    ">
+                        ${memory.content}
+                    </div>
+                    
+                    <div class="memory-meta">
+                        <span style="color: var(--text-muted); font-size: 0.8rem;">
+                            ${new Date(memory.created_at).toLocaleDateString()}
+                        </span>
+                        ${memory.category ? `
+                            <span style="
+                                padding: 0.25rem 0.5rem;
+                                background: rgba(255, 255, 255, 0.1);
+                                border-radius: var(--radius-sm);
+                                font-size: 0.8rem;
+                                color: var(--text-muted);
+                            ">
+                                ${memory.category}
+                            </span>
+                        ` : ''}
+                    </div>
+                </div>
+            `).join('');
+            
+            // Show/hide load more button
+            const loadMoreBtn = document.getElementById('loadMoreBtn');
+            if (endIndex < filteredMemories.length) {
+                loadMoreBtn.style.display = 'inline-block';
+            } else {
+                loadMoreBtn.style.display = 'none';
+            }
+        }
+
+        function loadMoreMemories() {
+            currentPage++;
+            displayMemories();
+        }
+
+        function searchMemories(query) {
+            if (!query.trim()) {
+                filterAndDisplayMemories();
+                return;
+            }
+            
+            const searchResults = document.getElementById('searchResults');
+            const results = memories.filter(memory => 
+                memory.title?.toLowerCase().includes(query.toLowerCase()) ||
+                memory.content.toLowerCase().includes(query.toLowerCase())
+            );
+            
+            if (results.length > 0) {
+                searchResults.innerHTML = results.slice(0, 5).map(memory => `
+                    <div onclick="viewMemoryDetails('${memory.id}')" style="
+                        padding: 0.5rem;
+                        background: rgba(255, 255, 255, 0.05);
+                        border-radius: var(--radius-sm);
+                        cursor: pointer;
+                        margin-bottom: 0.5rem;
+                        transition: all var(--transition-fast);
+                    " onmouseover="this.style.background='rgba(255, 255, 255, 0.1)'" 
+                       onmouseout="this.style.background='rgba(255, 255, 255, 0.05)'">
+                        <div style="font-weight: 500; color: var(--text-primary); font-size: 0.9rem;">
+                            ${memory.title || 'Untitled Memory'}
+                        </div>
+                        <div style="color: var(--text-muted); font-size: 0.8rem; margin-top: 0.25rem;">
+                            ${memory.content.substring(0, 50)}...
+                        </div>
+                    </div>
+                `).join('');
+            } else {
+                searchResults.innerHTML = '<div style="color: var(--text-muted); font-size: 0.9rem;">No results found</div>';
+            }
+        }
+
+        function filterByCategory(category) {
+            filteredMemories = memories.filter(memory => memory.category === category);
+            currentPage = 1;
+            displayMemories();
+        }
+
+        async function updateMemoryStats() {
+            const sessionMemories = memories.filter(m => m.type === 'session').length;
+            const longTermMemories = memories.filter(m => m.type === 'long_term').length;
+            
+            document.getElementById('totalMemories').textContent = memories.length;
+            document.getElementById('sessionMemories').textContent = sessionMemories;
+            document.getElementById('longTermMemories').textContent = longTermMemories;
+            document.getElementById('storageUsed').textContent = estimateStorageUsage();
+        }
+
+        function estimateStorageUsage() {
+            const totalChars = memories.reduce((sum, memory) => sum + (memory.content?.length || 0), 0);
+            const bytes = totalChars * 2; // Rough estimation
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+            return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+        }
+
+        function showEmptyState() {
+            document.getElementById('memoryGrid').style.display = 'none';
+            document.getElementById('emptyState').style.display = 'block';
+        }
+
+        function hideEmptyState() {
+            document.getElementById('memoryGrid').style.display = 'grid';
+            document.getElementById('emptyState').style.display = 'none';
+        }
+
+        function viewMemoryDetails(memoryId) {
+            // This would open a modal or navigate to a detail page
+            console.log('View memory details:', memoryId);
+        }
+
+        async function deleteMemory(memoryId) {
+            if (confirm('Are you sure you want to delete this memory?')) {
+                try {
+                    const response = await fetch(`/api/memories/${memoryId}`, {
+                        method: 'DELETE'
+                    });
+                    if (response.ok) {
+                        memories = memories.filter(m => m.id !== memoryId);
+                        filterAndDisplayMemories();
+                    }
+                } catch (error) {
+                    console.error('Error deleting memory:', error);
                 }
             }
-        `;
-        document.head.appendChild(style);
+        }
+
+        async function exportMemories() {
+            try {
+                const response = await fetch('/api/memories/export');
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'axiomos-memories.json';
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                }
+            } catch (error) {
+                console.error('Error exporting memories:', error);
+            }
+        }
+
+        async function clearSessionMemory() {
+            if (confirm('Are you sure you want to clear all session memories?')) {
+                try {
+                    const response = await fetch('/api/memories/session', {
+                        method: 'DELETE'
+                    });
+                    if (response.ok) {
+                        memories = memories.filter(m => m.type !== 'session');
+                        filterAndDisplayMemories();
+                    }
+                } catch (error) {
+                    console.error('Error clearing session memory:', error);
+                }
+            }
+        }
+
+        function showMemoryStats() {
+            // This would show detailed statistics
+            console.log('Show memory statistics');
+        }
     </script>
 </body>
 </html>

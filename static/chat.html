@@ -8,173 +8,448 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Particles.js CDN -->
+    <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
 </head>
 <body>
+    <!-- Particles.js Background -->
+    <div id="particles-js"></div>
+
     <!-- Floating Navigation Island -->
     <nav class="nav-island">
         <div class="nav-items">
             <a href="/static/index.html" class="nav-item">
-                💬 Home
+                <span>💬</span>
+                <span>Home</span>
             </a>
             <a href="/static/chat.html" class="nav-item active">
-                💭 Chat
+                <span>💭</span>
+                <span>Chat</span>
             </a>
             <a href="/static/memory.html" class="nav-item">
-                🧠 Memory
+                <span>🧠</span>
+                <span>Memory</span>
             </a>
             <a href="/static/settings.html" class="nav-item">
-                ⚙️ Settings
+                <span>⚙️</span>
+                <span>Settings</span>
             </a>
         </div>
     </nav>
 
     <!-- Main Container -->
     <div class="main-container">
-        <!-- Sidebar Spacer -->
-        <div class="sidebar"></div>
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="glass-card">
+                <h3 style="margin-bottom: 1rem; color: var(--text-primary);">💬 Chat Sessions</h3>
+                <div id="sessionList" style="margin-bottom: 1rem;">
+                    <!-- Sessions will be populated here -->
+                </div>
+                <button onclick="startNewSession()" class="send-button" style="width: 100%; text-align: center;">
+                    + New Session
+                </button>
+            </div>
+            
+            <div class="glass-card" style="margin-top: 1.5rem;">
+                <h4 style="margin-bottom: 0.75rem; color: var(--text-primary);">🤖 AI Status</h4>
+                <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+                    <div id="statusIndicator" class="loading" style="width: 8px; height: 8px; background: #4ade80; border-radius: 50%;"></div>
+                    <span id="statusText" style="color: var(--text-secondary); font-size: 0.9rem;">Connecting...</span>
+                </div>
+                <div style="color: var(--text-muted); font-size: 0.8rem; margin-top: 0.5rem;">
+                    Model: Groq LLaMA 3.1
+                </div>
+            </div>
+
+            <div class="glass-card" style="margin-top: 1.5rem;">
+                <h4 style="margin-bottom: 0.75rem; color: var(--text-primary);">📊 Quick Stats</h4>
+                <div style="color: var(--text-secondary); font-size: 0.9rem; line-height: 1.6;">
+                    <div style="margin-bottom: 0.5rem;">Messages: <span id="messageCount">0</span></div>
+                    <div style="margin-bottom: 0.5rem;">Session Time: <span id="sessionTime">0:00</span></div>
+                    <div>Tokens Used: <span id="tokenCount">0</span></div>
+                </div>
+            </div>
+        </div>
         
         <!-- Chat Container -->
-        <div class="chat-container">
-            <header class="chat-header">
-                <div class="header-content">
-                    <div class="logo">
-                        <h1>💭 AxiomOS Chat</h1>
-                        <span class="status online">● Online</span>
-                    </div>
-                    <div class="header-actions">
-                        <button id="clearChatBtn" class="btn btn-secondary">🗑️ Clear</button>
-                        <button id="settingsBtn" class="btn btn-secondary">⚙️ Settings</button>
-                    </div>
-                </div>
-            </header>
-
-            <main class="chat-main">
-                <div class="messages-container" id="messagesContainer">
-                    <div id="particles-js"></div>
+        <div class="page-content">
+            <div class="chat-container">
+                <!-- Messages Area -->
+                <div class="chat-messages" id="chatMessages">
                     <div class="message assistant">
                         <div class="message-content">
-                            <div class="message-text">
-                                ✨ Welcome to AxiomOS Chat Interface<br><br>
-                                I'm here to help with intelligent conversations and remember important information.<br><br>
-                                💾 **Remember**: Type "remember" followed by information to save<br>
-                                📋 **Recall**: Type "recall" to retrieve your memories<br>
-                                🗑️ **Delete**: Type "delete memory" to remove specific memories<br><br>
-                                <span style="background: linear-gradient(90deg, #00FF7F 0%, #22e9f0 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; filter: drop-shadow(0 1px 4px rgba(0, 255, 127, 0.3));">Powered by Groq's fast LLM models with advanced memory management.</span>
-                            </div>
+                            👋 Hello! I'm your AxiomOS AI assistant. I'm here to help you with any questions or tasks you might have. What would you like to discuss today?
                         </div>
-                        <div class="message-time">AxiomOS</div>
+                        <div class="message-time">Just now</div>
                     </div>
                 </div>
 
-                <div class="typing-indicator" id="typingIndicator" style="display: none;">
-                    <div class="typing-dots">
-                        <span></span>
-                        <span></span>
-                        <span></span>
-                    </div>
-                </div>
-            </main>
-
-            <footer class="chat-footer">
-                <div class="input-container">
+                <!-- Input Area -->
+                <div class="chat-input-container">
                     <textarea 
                         id="messageInput" 
-                        placeholder="Type your message here..." 
+                        class="chat-input" 
+                        placeholder="Type your message here... (Press Enter to send, Shift+Enter for new line)"
                         rows="1"
-                        maxlength="2000"
+                        style="resize: none; overflow: hidden;"
                     ></textarea>
-                    <button id="sendBtn" class="btn btn-primary">
-                        <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none">
-                            <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
-                        </svg>
+                    <button id="sendBtn" class="send-button" onclick="sendMessage()">
+                        <span id="sendBtnText">Send</span>
+                        <span id="sendBtnLoader" class="loading" style="display: none; margin-left: 0.5rem;"></span>
                     </button>
                 </div>
-                <div class="input-info">
-                    <span id="charCount">0</span>/2000 • Press Enter to send, Shift+Enter for new line
-                </div>
-            </footer>
-        </div>
-    </div>
-
-    <!-- Settings Modal -->
-    <div id="settingsModal" class="modal" style="display: none;">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>⚙️ Settings</h3>
-                <button class="modal-close" id="closeSettingsBtn">&times;</button>
-            </div>
-            <div class="modal-body">
-                <div class="setting-group">
-                    <label for="modelSelect">Model:</label>
-                    <select id="modelSelect">
-                        <option value="llama-3.1-8b-instant">Llama 3.1 8B Instant</option>
-                        <option value="llama-3.3-70b-versatile">Llama 3.3 70B Versatile</option>
-                    </select>
-                </div>
-                <div class="setting-group">
-                    <label for="temperatureSlider">Temperature: <span id="temperatureValue">0.7</span></label>
-                    <input type="range" id="temperatureSlider" min="0" max="2" step="0.1" value="0.7">
-                </div>
-                <div class="setting-group">
-                    <label for="maxTokensInput">Max Tokens:</label>
-                    <input type="number" id="maxTokensInput" min="100" max="4000" value="1000">
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button id="saveSettingsBtn" class="btn btn-primary">Save Settings</button>
             </div>
         </div>
     </div>
 
-    <script src="/static/js/app.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
-    <script src="particles.json"></script>
     <script>
-        // Initialize particles.js with enhanced animation
-        document.addEventListener('DOMContentLoaded', () => {
-            particlesJS.load('particles.json', (container) => {
-                if (container) {
-                    console.log('Particles.js loaded successfully');
-                } else {
-                    console.error('Particles container not found');
-                }
+        // Initialize Particles.js
+        document.addEventListener('DOMContentLoaded', function() {
+            particlesJS('particles-js', {
+                "particles": {
+                    "number": {
+                        "value": 80,
+                        "density": {
+                            "enable": true,
+                            "value_area": 800
+                        }
+                    },
+                    "color": {
+                        "value": "#45e2f2"
+                    },
+                    "shape": {
+                        "type": "circle"
+                    },
+                    "opacity": {
+                        "value": 0.5,
+                        "random": false
+                    },
+                    "size": {
+                        "value": 2,
+                        "random": true
+                    },
+                    "line_linked": {
+                        "enable": true,
+                        "distance": 120,
+                        "color": "#d1daff",
+                        "opacity": 0.3,
+                        "width": 1
+                    },
+                    "move": {
+                        "enable": true,
+                        "speed": 2,
+                        "direction": "none",
+                        "random": false,
+                        "straight": false,
+                        "out_mode": "out",
+                        "bounce": false
+                    }
+                },
+                "interactivity": {
+                    "detect_on": "canvas",
+                    "events": {
+                        "onhover": {
+                            "enable": true,
+                            "mode": "repulse"
+                        },
+                        "onclick": {
+                            "enable": false
+                        },
+                        "resize": true
+                    },
+                    "modes": {
+                        "repulse": {
+                            "distance": 100,
+                            "duration": 0.4
+                        }
+                    }
+                },
+                "retina_detect": true
             });
+
+            // Initialize chat functionality
+            initializeChat();
         });
-    </script>
-    <script>
-        // Initialize particles.js for enhanced text rendering
-        document.addEventListener('DOMContentLoaded', () => {
-            particlesJS({
-                target: '.message-text',
-                options: {
-                    color: '#00FF7F',
-                    maxParticles: 50,
-                    sizeVariations: 3,
-                    speed: 0.5,
-                    rotationSpeed: 0.1
+
+        let currentSessionId = null;
+        let messageCount = 0;
+        let sessionStartTime = Date.now();
+        let isTyping = false;
+
+        function initializeChat() {
+            const messageInput = document.getElementById('messageInput');
+            const sendBtn = document.getElementById('sendBtn');
+            
+            // Auto-resize textarea
+            messageInput.addEventListener('input', function() {
+                this.style.height = 'auto';
+                this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+            });
+
+            // Enter to send, Shift+Enter for new line
+            messageInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendMessage();
                 }
             });
 
-            // Add particles styling override for better contrast
-            const style = document.createElement('style');
-            style.textContent = `
-                .message-text p {
-                    position: relative;
-                    z-index: 1;
-                }
+            // Load or create session
+            loadOrCreateSession();
+            
+            // Update session time
+            setInterval(updateSessionTime, 1000);
+            
+            // Check server health
+            checkServerHealth();
+        }
+
+        async function loadOrCreateSession() {
+            try {
+                const response = await fetch('/api/sessions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
                 
-                #particles-js {
-                    position: absolute !important;
-                    top: 0 !important;
-                    left: 0 !important;
-                    width: 100% !important;
-                    height: 100% !important;
-                    pointer-events: none !important;
-                    z-index: 0 !important;
+                if (response.ok) {
+                    const session = await response.json();
+                    currentSessionId = session.session_id;
+                    loadSessionHistory();
+                    loadSessionsList();
+                    updateStatus('Connected', '#4ade80');
                 }
+            } catch (error) {
+                console.error('Failed to create session:', error);
+                updateStatus('Offline', '#ef4444');
+            }
+        }
+
+        async function sendMessage() {
+            const messageInput = document.getElementById('messageInput');
+            const message = messageInput.value.trim();
+            
+            if (!message || isTyping) return;
+            
+            isTyping = true;
+            messageInput.value = '';
+            messageInput.style.height = 'auto';
+            
+            // Add user message
+            addMessage(message, 'user');
+            messageCount++;
+            updateStats();
+            
+            // Show typing indicator
+            showTypingIndicator();
+            
+            try {
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        message: message,
+                        session_id: currentSessionId
+                    })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    hideTypingIndicator();
+                    addMessage(data.response, 'assistant');
+                    messageCount++;
+                    updateStats();
+                } else {
+                    throw new Error('Failed to send message');
+                }
+            } catch (error) {
+                hideTypingIndicator();
+                addMessage('Sorry, I encountered an error. Please try again.', 'assistant');
+                console.error('Chat error:', error);
+            } finally {
+                isTyping = false;
+            }
+        }
+
+        function addMessage(content, type) {
+            const chatMessages = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${type}`;
+            
+            const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            
+            messageDiv.innerHTML = `
+                <div class="message-content">${escapeHtml(content)}</div>
+                <div class="message-time">${time}</div>
             `;
-            document.head.appendChild(style);
-        });
+            
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function showTypingIndicator() {
+            const chatMessages = document.getElementById('chatMessages');
+            const typingDiv = document.createElement('div');
+            typingDiv.id = 'typingIndicator';
+            typingDiv.className = 'message assistant';
+            typingDiv.innerHTML = `
+                <div class="message-content">
+                    <span class="loading" style="display: inline-block; margin-right: 0.5rem;"></span>
+                    AI is thinking...
+                </div>
+            `;
+            chatMessages.appendChild(typingDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function hideTypingIndicator() {
+            const indicator = document.getElementById('typingIndicator');
+            if (indicator) {
+                indicator.remove();
+            }
+        }
+
+        function updateStatus(text, color) {
+            const statusText = document.getElementById('statusText');
+            const statusIndicator = document.getElementById('statusIndicator');
+            
+            statusText.textContent = text;
+            statusIndicator.style.background = color;
+            statusIndicator.classList.remove('loading');
+        }
+
+        function updateStats() {
+            document.getElementById('messageCount').textContent = messageCount;
+        }
+
+        function updateSessionTime() {
+            const elapsed = Math.floor((Date.now() - sessionStartTime) / 1000);
+            const minutes = Math.floor(elapsed / 60);
+            const seconds = elapsed % 60;
+            document.getElementById('sessionTime').textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+        }
+
+        async function loadSessionHistory() {
+            if (!currentSessionId) return;
+            
+            try {
+                const response = await fetch(`/api/sessions/${currentSessionId}/messages`);
+                if (response.ok) {
+                    const messages = await response.json();
+                    const chatMessages = document.getElementById('chatMessages');
+                    
+                    // Clear existing messages except the welcome message
+                    chatMessages.innerHTML = `
+                        <div class="message assistant">
+                            <div class="message-content">
+                                👋 Hello! I'm your AxiomOS AI assistant. I'm here to help you with any questions or tasks you might have. What would you like to discuss today?
+                            </div>
+                            <div class="message-time">Just now</div>
+                        </div>
+                    `;
+                    
+                    // Load historical messages
+                    messages.forEach(msg => {
+                        addMessage(msg.content, msg.type);
+                        messageCount++;
+                    });
+                    
+                    updateStats();
+                }
+            } catch (error) {
+                console.error('Failed to load session history:', error);
+            }
+        }
+
+        async function loadSessionsList() {
+            try {
+                const response = await fetch('/api/sessions');
+                if (response.ok) {
+                    const sessions = await response.json();
+                    const sessionList = document.getElementById('sessionList');
+                    
+                    sessionList.innerHTML = sessions.map(session => `
+                        <div class="session-item" onclick="loadSession('${session.session_id}')" style="
+                            padding: 0.75rem;
+                            margin-bottom: 0.5rem;
+                            background: rgba(255, 255, 255, 0.05);
+                            border-radius: var(--radius-sm);
+                            cursor: pointer;
+                            transition: all var(--transition-fast);
+                            border: 1px solid transparent;
+                        ">
+                            <div style="font-weight: 500; color: var(--text-primary); margin-bottom: 0.25rem;">
+                                ${session.title || 'New Chat'}
+                            </div>
+                            <div style="font-size: 0.8rem; color: var(--text-muted);">
+                                ${new Date(session.created_at).toLocaleDateString()}
+                            </div>
+                        </div>
+                    `).join('');
+                    
+                    // Add hover effects
+                    sessionList.querySelectorAll('.session-item').forEach(item => {
+                        item.addEventListener('mouseenter', function() {
+                            this.style.background = 'rgba(255, 255, 255, 0.1)';
+                            this.style.borderColor = 'var(--glass-border)';
+                        });
+                        item.addEventListener('mouseleave', function() {
+                            this.style.background = 'rgba(255, 255, 255, 0.05)';
+                            this.style.borderColor = 'transparent';
+                        });
+                    });
+                }
+            } catch (error) {
+                console.error('Failed to load sessions:', error);
+            }
+        }
+
+        function startNewSession() {
+            currentSessionId = null;
+            messageCount = 0;
+            sessionStartTime = Date.now();
+            
+            const chatMessages = document.getElementById('chatMessages');
+            chatMessages.innerHTML = `
+                <div class="message assistant">
+                    <div class="message-content">
+                        👋 Hello! I'm your AxiomOS AI assistant. I'm here to help you with any questions or tasks you might have. What would you like to discuss today?
+                    </div>
+                    <div class="message-time">Just now</div>
+                </div>
+            `;
+            
+            loadOrCreateSession();
+            updateStats();
+        }
+
+        async function loadSession(sessionId) {
+            currentSessionId = sessionId;
+            await loadSessionHistory();
+        }
+
+        async function checkServerHealth() {
+            try {
+                const response = await fetch('/api/health');
+                if (response.ok) {
+                    updateStatus('Connected', '#4ade80');
+                } else {
+                    updateStatus('Server Error', '#f59e0b');
+                }
+            } catch (error) {
+                updateStatus('Offline', '#ef4444');
+            }
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
     </script>
 </body>
 </html>

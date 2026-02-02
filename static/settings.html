@@ -8,167 +8,671 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Particles.js CDN -->
+    <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
 </head>
 <body>
+    <!-- Particles.js Background -->
+    <div id="particles-js"></div>
+
     <!-- Floating Navigation Island -->
     <nav class="nav-island">
         <div class="nav-items">
             <a href="/static/index.html" class="nav-item">
-                💬 Home
+                <span>💬</span>
+                <span>Home</span>
             </a>
             <a href="/static/chat.html" class="nav-item">
-                💭 Chat
+                <span>💭</span>
+                <span>Chat</span>
             </a>
             <a href="/static/memory.html" class="nav-item">
-                🧠 Memory
+                <span>🧠</span>
+                <span>Memory</span>
             </a>
             <a href="/static/settings.html" class="nav-item active">
-                ⚙️ Settings
+                <span>⚙️</span>
+                <span>Settings</span>
             </a>
         </div>
     </nav>
 
     <!-- Main Container -->
     <div class="main-container">
-        <!-- Sidebar Spacer -->
-        <div class="sidebar"></div>
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="glass-card">
+                <h3 style="margin-bottom: 1rem; color: var(--text-primary);">⚙️ Quick Settings</h3>
+                <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                    <button onclick="resetToDefaults()" class="nav-item" style="text-align: left; justify-content: flex-start; padding: 0.75rem;">
+                        🔄 Reset to Defaults
+                    </button>
+                    <button onclick="exportSettings()" class="nav-item" style="text-align: left; justify-content: flex-start; padding: 0.75rem;">
+                        📤 Export Settings
+                    </button>
+                    <button onclick="importSettings()" class="nav-item" style="text-align: left; justify-content: flex-start; padding: 0.75rem;">
+                        📥 Import Settings
+                    </button>
+                </div>
+            </div>
+            
+            <div class="glass-card" style="margin-top: 1.5rem;">
+                <h4 style="margin-bottom: 0.75rem; color: var(--text-primary);">📊 System Info</h4>
+                <div style="color: var(--text-secondary); font-size: 0.9rem; line-height: 1.6;">
+                    <div style="margin-bottom: 0.5rem;">Version: <span style="color: var(--primary-color);">0.1.0</span></div>
+                    <div style="margin-bottom: 0.5rem;">Model: <span style="color: var(--primary-color);">Groq LLaMA 3.1</span></div>
+                    <div style="margin-bottom: 0.5rem;">Status: <span style="color: #4ade80;">Online</span></div>
+                    <div>Uptime: <span id="uptime" style="color: var(--text-muted);">0:00:00</span></div>
+                </div>
+            </div>
+
+            <div class="glass-card" style="margin-top: 1.5rem;">
+                <h4 style="margin-bottom: 0.75rem; color: var(--text-primary);">💾 Storage</h4>
+                <div style="color: var(--text-secondary); font-size: 0.9rem; line-height: 1.6;">
+                    <div style="margin-bottom: 0.5rem;">Memories: <span id="memoryStorage" style="color: var(--text-muted);">0 KB</span></div>
+                    <div style="margin-bottom: 0.5rem;">Sessions: <span id="sessionStorage" style="color: var(--text-muted);">0 KB</span></div>
+                    <div>Total: <span id="totalStorage" style="color: var(--primary-color); font-weight: 600;">0 KB</span></div>
+                </div>
+            </div>
+        </div>
         
         <!-- Page Content -->
         <div class="page-content">
             <h1 class="page-title">⚙️ Settings</h1>
             <p class="page-description">
-                Customize your AxiomOS experience with personalized settings. 
-                Configure model preferences, memory management, and interface options to optimize your workflow.
+                Customize your AxiomOS experience. Configure AI behavior, appearance, privacy settings, and more.
             </p>
-            
-            <div class="feature-grid">
-                <div class="feature-card">
-                    <div class="feature-icon">🤖</div>
-                    <h3 class="feature-title">AI Model</h3>
-                    <p class="feature-text">
-                        Choose from available language models or configure custom parameters. 
-                        Adjust temperature, max tokens, and response style to match your preferences.
-                    </p>
+
+            <div class="settings-container">
+                <!-- AI Configuration -->
+                <div class="settings-section">
+                    <h2 class="settings-title">🤖 AI Configuration</h2>
+                    
+                    <div class="setting-item">
+                        <div class="setting-label">
+                            <div>AI Model</div>
+                            <div style="color: var(--text-muted); font-size: 0.9rem;">Choose the AI model for responses</div>
+                        </div>
+                        <div class="setting-control">
+                            <select class="select-input" id="aiModel" onchange="saveSetting('aiModel', this.value)">
+                                <option value="llama-3.1-8b-instant">LLaMA 3.1 8B (Fast)</option>
+                                <option value="llama-3.1-70b">LLaMA 3.1 70B (Balanced)</option>
+                                <option value="mixtral-8x7b">Mixtral 8x7B (Advanced)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="setting-item">
+                        <div class="setting-label">
+                            <div>Temperature</div>
+                            <div style="color: var(--text-muted); font-size: 0.9rem;">Control creativity (0.0 - 1.0)</div>
+                        </div>
+                        <div class="setting-control">
+                            <input type="range" id="temperature" min="0" max="100" value="70" 
+                                   style="width: 150px;" onchange="updateTemperature(this.value)">
+                            <span id="temperatureValue" style="color: var(--text-secondary); margin-left: 0.5rem;">0.7</span>
+                        </div>
+                    </div>
+
+                    <div class="setting-item">
+                        <div class="setting-label">
+                            <div>Max Tokens</div>
+                            <div style="color: var(--text-muted); font-size: 0.9rem;">Maximum response length</div>
+                        </div>
+                        <div class="setting-control">
+                            <select class="select-input" id="maxTokens" onchange="saveSetting('maxTokens', this.value)">
+                                <option value="500">500</option>
+                                <option value="1000" selected>1000</option>
+                                <option value="2000">2000</option>
+                                <option value="4000">4000</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="setting-item">
+                        <div class="setting-label">
+                            <div>Stream Responses</div>
+                            <div style="color: var(--text-muted); font-size: 0.9rem;">Show responses as they're generated</div>
+                        </div>
+                        <div class="setting-control">
+                            <div class="toggle-switch active" id="streamToggle" onclick="toggleSetting('streamToggle', 'stream')"></div>
+                        </div>
+                    </div>
                 </div>
-                
-                <div class="feature-card">
-                    <div class="feature-icon">🎨</div>
-                    <h3 class="feature-title">Interface</h3>
-                    <p class="feature-text">
-                        Personalize the look and feel of AxiomOS. 
-                        Choose themes, adjust layouts, and customize visual elements to your liking.
-                    </p>
+
+                <!-- Memory Settings -->
+                <div class="settings-section">
+                    <h2 class="settings-title">🧠 Memory Settings</h2>
+                    
+                    <div class="setting-item">
+                        <div class="setting-label">
+                            <div>Auto-save Memories</div>
+                            <div style="color: var(--text-muted); font-size: 0.9rem;">Automatically save important information</div>
+                        </div>
+                        <div class="setting-control">
+                            <div class="toggle-switch active" id="autoSaveToggle" onclick="toggleSetting('autoSaveToggle', 'autoSave')"></div>
+                        </div>
+                    </div>
+
+                    <div class="setting-item">
+                        <div class="setting-label">
+                            <div>Memory Retention</div>
+                            <div style="color: var(--text-muted); font-size: 0.9rem;">How long to keep session memories</div>
+                        </div>
+                        <div class="setting-control">
+                            <select class="select-input" id="memoryRetention" onchange="saveSetting('memoryRetention', this.value)">
+                                <option value="1day">1 Day</option>
+                                <option value="1week" selected>1 Week</option>
+                                <option value="1month">1 Month</option>
+                                <option value="forever">Forever</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="setting-item">
+                        <div class="setting-label">
+                            <div>Memory Categories</div>
+                            <div style="color: var(--text-muted); font-size: 0.9rem;">Enable automatic categorization</div>
+                        </div>
+                        <div class="setting-control">
+                            <div class="toggle-switch active" id="categoriesToggle" onclick="toggleSetting('categoriesToggle', 'categories')"></div>
+                        </div>
+                    </div>
                 </div>
-                
-                <div class="feature-card">
-                    <div class="feature-icon">🔐</div>
-                    <h3 class="feature-title">Privacy & Security</h3>
-                    <p class="feature-text">
-                        Control your data with advanced privacy settings. 
-                        Configure encryption, data retention policies, and access permissions for complete security.
-                    </p>
+
+                <!-- Appearance -->
+                <div class="settings-section">
+                    <h2 class="settings-title">🎨 Appearance</h2>
+                    
+                    <div class="setting-item">
+                        <div class="setting-label">
+                            <div>Theme</div>
+                            <div style="color: var(--text-muted); font-size: 0.9rem;">Choose your preferred theme</div>
+                        </div>
+                        <div class="setting-control">
+                            <select class="select-input" id="theme" onchange="saveSetting('theme', this.value)">
+                                <option value="glassmorphism" selected>Glassmorphism</option>
+                                <option value="dark">Dark</option>
+                                <option value="light">Light</option>
+                                <option value="auto">Auto</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="setting-item">
+                        <div class="setting-label">
+                            <div>Particles Animation</div>
+                            <div style="color: var(--text-muted); font-size: 0.9rem;">Background particle effects</div>
+                        </div>
+                        <div class="setting-control">
+                            <div class="toggle-switch active" id="particlesToggle" onclick="toggleSetting('particlesToggle', 'particles')"></div>
+                        </div>
+                    </div>
+
+                    <div class="setting-item">
+                        <div class="setting-label">
+                            <div>Animation Speed</div>
+                            <div style="color: var(--text-muted); font-size: 0.9rem;">UI animation speed</div>
+                        </div>
+                        <div class="setting-control">
+                            <select class="select-input" id="animationSpeed" onchange="saveSetting('animationSpeed', this.value)">
+                                <option value="slow">Slow</option>
+                                <option value="normal" selected>Normal</option>
+                                <option value="fast">Fast</option>
+                                <option value="off">Off</option>
+                            </select>
+                        </div>
+                    </div>
                 </div>
-                
-                <div class="feature-card">
-                    <div class="feature-icon">📊</div>
-                    <h3 class="feature-title">Performance</h3>
-                    <p class="feature-text">
-                        Monitor and optimize system performance. 
-                        Track response times, memory usage, and system health metrics.
-                    </p>
+
+                <!-- Privacy & Security -->
+                <div class="settings-section">
+                    <h2 class="settings-title">🔒 Privacy & Security</h2>
+                    
+                    <div class="setting-item">
+                        <div class="setting-label">
+                            <div>Data Collection</div>
+                            <div style="color: var(--text-muted); font-size: 0.9rem;">Help improve AxiomOS with anonymous data</div>
+                        </div>
+                        <div class="setting-control">
+                            <div class="toggle-switch" id="dataCollectionToggle" onclick="toggleSetting('dataCollectionToggle', 'dataCollection')"></div>
+                        </div>
+                    </div>
+
+                    <div class="setting-item">
+                        <div class="setting-label">
+                            <div>Local Storage Only</div>
+                            <div style="color: var(--text-muted); font-size: 0.9rem;">Store data locally only (no cloud sync)</div>
+                        </div>
+                        <div class="setting-control">
+                            <div class="toggle-switch" id="localOnlyToggle" onclick="toggleSetting('localOnlyToggle', 'localOnly')"></div>
+                        </div>
+                    </div>
+
+                    <div class="setting-item">
+                        <div class="setting-label">
+                            <div>Auto-clear History</div>
+                            <div style="color: var(--text-muted); font-size: 0.9rem;">Automatically clear chat history</div>
+                        </div>
+                        <div class="setting-control">
+                            <select class="select-input" id="autoClearHistory" onchange="saveSetting('autoClearHistory', this.value)">
+                                <option value="never" selected>Never</option>
+                                <option value="daily">Daily</option>
+                                <option value="weekly">Weekly</option>
+                                <option value="monthly">Monthly</option>
+                            </select>
+                        </div>
+                    </div>
                 </div>
-                
-                <div class="feature-card">
-                    <div class="feature-icon">💾</div>
-                    <h3 class="feature-title">Memory Controls</h3>
-                    <p class="feature-text">
-                        Fine-tune memory management preferences. 
-                        Set auto-save options, retention periods, and memory categorization rules.
-                    </p>
+
+                <!-- Notifications -->
+                <div class="settings-section">
+                    <h2 class="settings-title">🔔 Notifications</h2>
+                    
+                    <div class="setting-item">
+                        <div class="setting-label">
+                            <div>Desktop Notifications</div>
+                            <div style="color: var(--text-muted); font-size: 0.9rem;">Show desktop notifications</div>
+                        </div>
+                        <div class="setting-control">
+                            <div class="toggle-switch" id="desktopNotificationsToggle" onclick="toggleSetting('desktopNotificationsToggle', 'desktopNotifications')"></div>
+                        </div>
+                    </div>
+
+                    <div class="setting-item">
+                        <div class="setting-label">
+                            <div>Sound Effects</div>
+                            <div style="color: var(--text-muted); font-size: 0.9rem;">Play sound for notifications</div>
+                        </div>
+                        <div class="setting-control">
+                            <div class="toggle-switch" id="soundEffectsToggle" onclick="toggleSetting('soundEffectsToggle', 'soundEffects')"></div>
+                        </div>
+                    </div>
+
+                    <div class="setting-item">
+                        <div class="setting-label">
+                            <div>Message Preview</div>
+                            <div style="color: var(--text-muted); font-size: 0.9rem;">Show message content in notifications</div>
+                        </div>
+                        <div class="setting-control">
+                            <div class="toggle-switch active" id="messagePreviewToggle" onclick="toggleSetting('messagePreviewToggle', 'messagePreview')"></div>
+                        </div>
+                    </div>
                 </div>
-                
-                <div class="feature-card">
-                    <div class="feature-icon">🔔</div>
-                    <h3 class="feature-title">Notifications</h3>
-                    <p class="feature-text">
-                        Configure alerts and notification preferences. 
-                        Choose when and how you want to be notified about important events and system updates.
-                    </p>
+
+                <!-- Advanced Settings -->
+                <div class="settings-section">
+                    <h2 class="settings-title">🔧 Advanced</h2>
+                    
+                    <div class="setting-item">
+                        <div class="setting-label">
+                            <div>Debug Mode</div>
+                            <div style="color: var(--text-muted); font-size: 0.9rem;">Enable debug logging</div>
+                        </div>
+                        <div class="setting-control">
+                            <div class="toggle-switch" id="debugModeToggle" onclick="toggleSetting('debugModeToggle', 'debugMode')"></div>
+                        </div>
+                    </div>
+
+                    <div class="setting-item">
+                        <div class="setting-label">
+                            <div>API Endpoint</div>
+                            <div style="color: var(--text-muted); font-size: 0.9rem;">Custom API endpoint URL</div>
+                        </div>
+                        <div class="setting-control">
+                            <input type="text" id="apiEndpoint" placeholder="http://localhost:8000" 
+                                   style="
+                                       background: rgba(255, 255, 255, 0.05);
+                                       border: 1px solid rgba(255, 255, 255, 0.1);
+                                       border-radius: var(--radius-md);
+                                       padding: 0.5rem;
+                                       color: var(--text-primary);
+                                       width: 200px;
+                                       outline: none;
+                                   " onchange="saveSetting('apiEndpoint', this.value)">
+                        </div>
+                    </div>
+
+                    <div class="setting-item">
+                        <div class="setting-label">
+                            <div>Request Timeout</div>
+                            <div style="color: var(--text-muted); font-size: 0.9rem;">API request timeout (seconds)</div>
+                        </div>
+                        <div class="setting-control">
+                            <input type="number" id="requestTimeout" value="30" min="5" max="300"
+                                   style="
+                                       background: rgba(255, 255, 255, 0.05);
+                                       border: 1px solid rgba(255, 255, 255, 0.1);
+                                       border-radius: var(--radius-md);
+                                       padding: 0.5rem;
+                                       color: var(--text-primary);
+                                       width: 80px;
+                                       outline: none;
+                                   " onchange="saveSetting('requestTimeout', this.value)">
+                        </div>
+                    </div>
                 </div>
-                
-                <div class="feature-card">
-                    <div class="feature-icon">🔧</div>
-                    <h3 class="feature-title">Advanced</h3>
-                    <p class="feature-text">
-                        Access developer and advanced configuration options. 
-                        Fine-tune system behavior, debug issues, and access experimental features.
-                    </p>
+
+                <!-- Save Button -->
+                <div style="text-align: center; margin-top: 2rem;">
+                    <button onclick="saveAllSettings()" class="send-button" style="margin-right: 1rem;">
+                        💾 Save All Settings
+                    </button>
+                    <button onclick="resetToDefaults()" class="nav-item" style="display: inline-block; padding: 0.75rem 1.5rem;">
+                        🔄 Reset to Defaults
+                    </button>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            // Add ripple effects to settings cards
-            document.querySelectorAll('.feature-card').forEach(card => {
-                card.addEventListener('mouseenter', (e) => createRipple(e));
-            });
-            
-            // Animate on scroll
-            const observer = new IntersectionObserver((entries) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        entry.target.style.animation = 'slideInUp 0.6s ease-out';
+        // Initialize Particles.js
+        document.addEventListener('DOMContentLoaded', function() {
+            particlesJS('particles-js', {
+                "particles": {
+                    "number": {
+                        "value": 60,
+                        "density": {
+                            "enable": true,
+                            "value_area": 800
+                        }
+                    },
+                    "color": {
+                        "value": "#45e2f2"
+                    },
+                    "shape": {
+                        "type": "circle"
+                    },
+                    "opacity": {
+                        "value": 0.3,
+                        "random": false
+                    },
+                    "size": {
+                        "value": 2,
+                        "random": true
+                    },
+                    "line_linked": {
+                        "enable": true,
+                        "distance": 140,
+                        "color": "#d1daff",
+                        "opacity": 0.2,
+                        "width": 1
+                    },
+                    "move": {
+                        "enable": true,
+                        "speed": 1.8,
+                        "direction": "none",
+                        "random": false,
+                        "straight": false,
+                        "out_mode": "out",
+                        "bounce": false
                     }
-                });
-            }, { threshold: 0.1 });
-
-            document.querySelectorAll('.feature-card').forEach(card => {
-                observer.observe(card);
+                },
+                "interactivity": {
+                    "detect_on": "canvas",
+                    "events": {
+                        "onhover": {
+                            "enable": true,
+                            "mode": "repulse"
+                        },
+                        "onclick": {
+                            "enable": false
+                        },
+                        "resize": true
+                    },
+                    "modes": {
+                        "repulse": {
+                            "distance": 80,
+                            "duration": 0.4
+                        }
+                    }
+                },
+                "retina_detect": true
             });
+
+            // Initialize settings
+            initializeSettings();
+            updateSystemInfo();
+            setInterval(updateSystemInfo, 1000);
         });
 
-        function createRipple(event) {
-            const card = event.currentTarget;
-            const ripple = document.createElement('span');
-            const rect = card.getBoundingClientRect();
-            const size = Math.max(rect.width, rect.height);
-            const x = event.clientX - rect.left - size / 2;
-            const y = event.clientY - rect.top - size / 2;
+        let settings = {
+            aiModel: 'llama-3.1-8b-instant',
+            temperature: 0.7,
+            maxTokens: 1000,
+            stream: true,
+            autoSave: true,
+            memoryRetention: '1week',
+            categories: true,
+            theme: 'glassmorphism',
+            particles: true,
+            animationSpeed: 'normal',
+            dataCollection: false,
+            localOnly: false,
+            autoClearHistory: 'never',
+            desktopNotifications: false,
+            soundEffects: false,
+            messagePreview: true,
+            debugMode: false,
+            apiEndpoint: '',
+            requestTimeout: 30
+        };
 
-            ripple.style.cssText = `
-                position: absolute;
-                border-radius: 50%;
-                background: rgba(0, 255, 127, 0.2);
-                transform: scale(0);
-                animation: ripple 0.6s linear;
-                width: ${size}px;
-                height: ${size}px;
-                left: ${x}px;
-                top: ${y}px;
-                pointer-events: none;
-            `;
-
-            card.style.position = 'relative';
-            card.style.overflow = 'hidden';
-            card.appendChild(ripple);
-
-            setTimeout(() => {
-                ripple.remove();
-            }, 600);
+        function initializeSettings() {
+            // Load settings from localStorage
+            const savedSettings = localStorage.getItem('axiomos_settings');
+            if (savedSettings) {
+                settings = { ...settings, ...JSON.parse(savedSettings) };
+            }
+            
+            // Apply settings to UI
+            applySettingsToUI();
         }
 
-        // Add ripple animation CSS
+        function applySettingsToUI() {
+            // Set select values
+            document.getElementById('aiModel').value = settings.aiModel;
+            document.getElementById('maxTokens').value = settings.maxTokens;
+            document.getElementById('memoryRetention').value = settings.memoryRetention;
+            document.getElementById('theme').value = settings.theme;
+            document.getElementById('animationSpeed').value = settings.animationSpeed;
+            document.getElementById('autoClearHistory').value = settings.autoClearHistory;
+            document.getElementById('apiEndpoint').value = settings.apiEndpoint || '';
+            document.getElementById('requestTimeout').value = settings.requestTimeout;
+            
+            // Set temperature
+            document.getElementById('temperature').value = settings.temperature * 100;
+            document.getElementById('temperatureValue').textContent = settings.temperature.toFixed(1);
+            
+            // Set toggle states
+            setToggleState('streamToggle', settings.stream);
+            setToggleState('autoSaveToggle', settings.autoSave);
+            setToggleState('categoriesToggle', settings.categories);
+            setToggleState('particlesToggle', settings.particles);
+            setToggleState('dataCollectionToggle', settings.dataCollection);
+            setToggleState('localOnlyToggle', settings.localOnly);
+            setToggleState('desktopNotificationsToggle', settings.desktopNotifications);
+            setToggleState('soundEffectsToggle', settings.soundEffects);
+            setToggleState('messagePreviewToggle', settings.messagePreview);
+            setToggleState('debugModeToggle', settings.debugMode);
+        }
+
+        function setToggleState(toggleId, state) {
+            const toggle = document.getElementById(toggleId);
+            if (state) {
+                toggle.classList.add('active');
+            } else {
+                toggle.classList.remove('active');
+            }
+        }
+
+        function toggleSetting(toggleId, settingKey) {
+            const toggle = document.getElementById(toggleId);
+            toggle.classList.toggle('active');
+            settings[settingKey] = toggle.classList.contains('active');
+            saveSettings();
+        }
+
+        function saveSetting(key, value) {
+            settings[key] = value;
+            saveSettings();
+        }
+
+        function updateTemperature(value) {
+            const temp = value / 100;
+            document.getElementById('temperatureValue').textContent = temp.toFixed(1);
+            settings.temperature = temp;
+            saveSettings();
+        }
+
+        function saveSettings() {
+            localStorage.setItem('axiomos_settings', JSON.stringify(settings));
+        }
+
+        function saveAllSettings() {
+            saveSettings();
+            showNotification('Settings saved successfully!', 'success');
+        }
+
+        function resetToDefaults() {
+            if (confirm('Are you sure you want to reset all settings to their default values?')) {
+                localStorage.removeItem('axiomos_settings');
+                settings = {
+                    aiModel: 'llama-3.1-8b-instant',
+                    temperature: 0.7,
+                    maxTokens: 1000,
+                    stream: true,
+                    autoSave: true,
+                    memoryRetention: '1week',
+                    categories: true,
+                    theme: 'glassmorphism',
+                    particles: true,
+                    animationSpeed: 'normal',
+                    dataCollection: false,
+                    localOnly: false,
+                    autoClearHistory: 'never',
+                    desktopNotifications: false,
+                    soundEffects: false,
+                    messagePreview: true,
+                    debugMode: false,
+                    apiEndpoint: '',
+                    requestTimeout: 30
+                };
+                applySettingsToUI();
+                showNotification('Settings reset to defaults!', 'info');
+            }
+        }
+
+        function exportSettings() {
+            const dataStr = JSON.stringify(settings, null, 2);
+            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+            
+            const exportFileDefaultName = 'axiomos-settings.json';
+            
+            const linkElement = document.createElement('a');
+            linkElement.setAttribute('href', dataUri);
+            linkElement.setAttribute('download', exportFileDefaultName);
+            linkElement.click();
+            
+            showNotification('Settings exported successfully!', 'success');
+        }
+
+        function importSettings() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.json';
+            
+            input.onchange = e => {
+                const file = e.target.files[0];
+                const reader = new FileReader();
+                
+                reader.onload = event => {
+                    try {
+                        const importedSettings = JSON.parse(event.target.result);
+                        settings = { ...settings, ...importedSettings };
+                        applySettingsToUI();
+                        saveSettings();
+                        showNotification('Settings imported successfully!', 'success');
+                    } catch (error) {
+                        showNotification('Error importing settings. Please check the file format.', 'error');
+                    }
+                };
+                
+                reader.readAsText(file);
+            };
+            
+            input.click();
+        }
+
+        function updateSystemInfo() {
+            // Update uptime
+            const uptime = document.getElementById('uptime');
+            if (uptime) {
+                const now = Date.now();
+                const start = localStorage.getItem('axiomos_start_time') || now;
+                const elapsed = Math.floor((now - parseInt(start)) / 1000);
+                const hours = Math.floor(elapsed / 3600);
+                const minutes = Math.floor((elapsed % 3600) / 60);
+                const seconds = elapsed % 60;
+                uptime.textContent = `${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            }
+            
+            // Update storage info (mock data for now)
+            document.getElementById('memoryStorage').textContent = '2.4 KB';
+            document.getElementById('sessionStorage').textContent = '1.2 KB';
+            document.getElementById('totalStorage').textContent = '3.6 KB';
+        }
+
+        function showNotification(message, type) {
+            // Create notification element
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 100px;
+                right: 20px;
+                background: ${type === 'success' ? 'rgba(74, 222, 128, 0.9)' : type === 'error' ? 'rgba(239, 68, 68, 0.9)' : 'rgba(69, 226, 242, 0.9)'};
+                color: white;
+                padding: 1rem 1.5rem;
+                border-radius: var(--radius-md);
+                box-shadow: var(--glass-shadow);
+                z-index: 10000;
+                animation: slideInRight 0.3s ease-out;
+                max-width: 300px;
+            `;
+            notification.textContent = message;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.animation = 'slideOutRight 0.3s ease-out';
+                setTimeout(() => {
+                    notification.remove();
+                }, 300);
+            }, 3000);
+        }
+
+        // Add slide animations
         const style = document.createElement('style');
         style.textContent = `
-            @keyframes ripple {
-                0% {
-                    transform: scale(0);
+            @keyframes slideInRight {
+                from {
+                    transform: translateX(100%);
+                    opacity: 0;
+                }
+                to {
+                    transform: translateX(0);
                     opacity: 1;
                 }
-                100% {
-                    transform: scale(4);
+            }
+            
+            @keyframes slideOutRight {
+                from {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
+                to {
+                    transform: translateX(100%);
                     opacity: 0;
                 }
             }

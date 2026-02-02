@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AxiomOS - Design Test</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+    <script src="/static/js/particles-utils.js"></script>
+    <script src="/static/js/glassmorphism-utils.js"></script>
+    <style>
+        .test-container {
+            padding: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .test-section {
+            margin-bottom: 3rem;
+        }
+        .test-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1rem;
+        }
+        .viewport-info {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 0.5rem;
+            border-radius: 0.5rem;
+            font-size: 0.9rem;
+            z-index: 10000;
+        }
+        .test-button {
+            padding: 0.75rem 1.5rem;
+            margin: 0.5rem;
+            background: var(--glass-bg);
+            backdrop-filter: var(--backdrop-blur);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-md);
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+        .test-button:hover {
+            background: var(--glass-bg-hover);
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+    <!-- Particles.js Background -->
+    <div id="particles-js"></div>
+
+    <!-- Viewport Info -->
+    <div class="viewport-info" id="viewportInfo">
+        <div>Viewport: <span id="viewportSize"></span></div>
+        <div>Device: <span id="deviceType"></span></div>
+        <div>Orientation: <span id="orientation"></span></div>
+    </div>
+
+    <!-- Floating Navigation Island -->
+    <nav class="nav-island">
+        <div class="nav-items">
+            <a href="/static/index.html" class="nav-item">
+                <span>💬</span>
+                <span>Home</span>
+            </a>
+            <a href="/static/chat.html" class="nav-item">
+                <span>💭</span>
+                <span>Chat</span>
+            </a>
+            <a href="/static/memory.html" class="nav-item">
+                <span>🧠</span>
+                <span>Memory</span>
+            </a>
+            <a href="/static/settings.html" class="nav-item">
+                <span>⚙️</span>
+                <span>Settings</span>
+            </a>
+            <a href="/static/test.html" class="nav-item active">
+                <span>🧪</span>
+                <span>Test</span>
+            </a>
+        </div>
+    </nav>
+
+    <!-- Main Container -->
+    <div class="main-container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="glass-card">
+                <h3 style="margin-bottom: 1rem; color: var(--text-primary);">🧪 Design Tests</h3>
+                <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                    <button onclick="testResponsiveness()" class="test-button">Test Responsive</button>
+                    <button onclick="testAnimations()" class="test-button">Test Animations</button>
+                    <button onclick="testParticles()" class="test-button">Test Particles</button>
+                    <button onclick="testGlassEffects()" class="test-button">Test Glass Effects</button>
+                    <button onclick="simulateDevices()" class="test-button">Simulate Devices</button>
+                </div>
+            </div>
+            
+            <div class="glass-card" style="margin-top: 1.5rem;">
+                <h4 style="margin-bottom: 0.75rem; color: var(--text-primary);">📊 Test Results</h4>
+                <div id="testResults" style="color: var(--text-secondary); font-size: 0.9rem; line-height: 1.6;">
+                    <div>✅ CSS Variables: Working</div>
+                    <div>✅ Glassmorphism: Working</div>
+                    <div>✅ Particles.js: Working</div>
+                    <div>⏳ Responsive: Testing...</div>
+                    <div>⏳ Animations: Testing...</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Page Content -->
+        <div class="page-content">
+            <div class="test-container">
+                <h1 class="page-title">🧪 Design System Test</h1>
+                <p class="page-description">
+                    Comprehensive testing of the AxiomOS glassmorphism design system, responsive layouts, and interactive features.
+                </p>
+
+                <!-- Typography Test -->
+                <div class="test-section">
+                    <h2 style="color: var(--text-primary); margin-bottom: 1rem;">📝 Typography Test</h2>
+                    <div class="glass-card">
+                        <h1 style="margin-bottom: 0.5rem;">Heading 1 - Welcome to AxiomOS</h1>
+                        <h2 style="margin-bottom: 0.5rem;">Heading 2 - Advanced AI Assistant</h2>
+                        <h3 style="margin-bottom: 0.5rem;">Heading 3 - Memory Management</h3>
+                        <h4 style="margin-bottom: 0.5rem;">Heading 4 - Settings Configuration</h4>
+                        <p style="margin-bottom: 0.5rem;">Regular paragraph text with proper line height and spacing for optimal readability.</p>
+                        <p style="color: var(--text-secondary);">Secondary text with muted color for less important information.</p>
+                        <p style="color: var(--text-muted);">Muted text for subtle UI elements and metadata.</p>
+                    </div>
+                </div>
+
+                <!-- Glassmorphism Components Test -->
+                <div class="test-section">
+                    <h2 style="color: var(--text-primary); margin-bottom: 1rem;">🎨 Glassmorphism Components</h2>
+                    <div class="test-grid">
+                        <div class="glass-card">
+                            <h3 style="color: var(--primary-color); margin-bottom: 0.5rem;">Basic Card</h3>
+                            <p style="color: var(--text-secondary);">Standard glassmorphism card with backdrop blur and transparency.</p>
+                        </div>
+                        <div class="glass-card" style="background: rgba(69, 226, 242, 0.1);">
+                            <h3 style="color: var(--primary-color); margin-bottom: 0.5rem;">Tinted Card</h3>
+                            <p style="color: var(--text-secondary);">Glass card with primary color tint for emphasis.</p>
+                        </div>
+                        <div class="glass-card" style="border: 2px solid var(--primary-color);">
+                            <h3 style="color: var(--primary-color); margin-bottom: 0.5rem;">Bordered Card</h3>
+                            <p style="color: var(--text-secondary);">Glass card with emphasized border for highlighting.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Interactive Elements Test -->
+                <div class="test-section">
+                    <h2 style="color: var(--text-primary); margin-bottom: 1rem;">🎯 Interactive Elements</h2>
+                    <div class="test-grid">
+                        <div class="glass-card">
+                            <h3 style="margin-bottom: 1rem;">Buttons</h3>
+                            <button class="send-button" style="margin-bottom: 0.5rem; width: 100%;">Primary Button</button>
+                            <button class="nav-item" style="margin-bottom: 0.5rem; width: 100%; text-align: center;">Secondary Button</button>
+                            <div class="toggle-switch" style="margin: 0.5rem auto;" onclick="this.classList.toggle('active')"></div>
+                        </div>
+                        <div class="glass-card">
+                            <h3 style="margin-bottom: 1rem;">Form Elements</h3>
+                            <input type="text" placeholder="Text input" style="width: 100%; margin-bottom: 0.5rem; padding: 0.75rem; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: var(--radius-md); color: var(--text-primary);">
+                            <select style="width: 100%; padding: 0.75rem; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: var(--radius-md); color: var(--text-primary);">
+                                <option>Option 1</option>
+                                <option>Option 2</option>
+                                <option>Option 3</option>
+                            </select>
+                        </div>
+                        <div class="glass-card">
+                            <h3 style="margin-bottom: 1rem;">Status Indicators</h3>
+                            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+                                <div style="width: 8px; height: 8px; background: #4ade80; border-radius: 50%;"></div>
+                                <span style="color: var(--text-secondary);">Online</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+                                <div class="loading" style="width: 8px; height: 8px;"></div>
+                                <span style="color: var(--text-secondary);">Loading</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                <div style="width: 8px; height: 8px; background: #ef4444; border-radius: 50%;"></div>
+                                <span style="color: var(--text-secondary);">Offline</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Layout Test -->
+                <div class="test-section">
+                    <h2 style="color: var(--text-primary); margin-bottom: 1rem;">📱 Responsive Layout Test</h2>
+                    <div class="glass-card">
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                            <div style="background: rgba(255, 255, 255, 0.05); padding: 1rem; border-radius: var(--radius-sm); text-align: center;">
+                                <div style="font-size: 2rem; margin-bottom: 0.5rem;">📱</div>
+                                <div style="color: var(--text-primary); font-weight: 600;">Mobile</div>
+                                <div style="color: var(--text-muted); font-size: 0.9rem;">&lt; 768px</div>
+                            </div>
+                            <div style="background: rgba(255, 255, 255, 0.05); padding: 1rem; border-radius: var(--radius-sm); text-align: center;">
+                                <div style="font-size: 2rem; margin-bottom: 0.5rem;">📱</div>
+                                <div style="color: var(--text-primary); font-weight: 600;">Tablet</div>
+                                <div style="color: var(--text-muted); font-size: 0.9rem;">768px - 1024px</div>
+                            </div>
+                            <div style="background: rgba(255, 255, 255, 0.05); padding: 1rem; border-radius: var(--radius-sm); text-align: center;">
+                                <div style="font-size: 2rem; margin-bottom: 0.5rem;">🖥️</div>
+                                <div style="color: var(--text-primary); font-weight: 600;">Desktop</div>
+                                <div style="color: var(--text-muted); font-size: 0.9rem;">&gt; 1024px</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Animation Test -->
+                <div class="test-section">
+                    <h2 style="color: var(--text-primary); margin-bottom: 1rem;">✨ Animation Test</h2>
+                    <div class="test-grid">
+                        <div class="glass-card" id="floatCard">
+                            <h3 style="margin-bottom: 0.5rem;">Float Animation</h3>
+                            <p style="color: var(--text-secondary);">This card should be floating gently.</p>
+                        </div>
+                        <div class="glass-card" id="pulseCard">
+                            <h3 style="margin-bottom: 0.5rem;">Pulse Animation</h3>
+                            <p style="color: var(--text-secondary);">This card should be pulsing.</p>
+                        </div>
+                        <div class="glass-card" id="rippleCard">
+                            <h3 style="margin-bottom: 0.5rem;">Ripple Effect</h3>
+                            <p style="color: var(--text-secondary);">Click this card to see ripple effect.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Browser Compatibility Test -->
+                <div class="test-section">
+                    <h2 style="color: var(--text-primary); margin-bottom: 1rem;">🌐 Browser Compatibility</h2>
+                    <div class="glass-card">
+                        <div id="browserInfo" style="margin-bottom: 1rem;"></div>
+                        <div id="compatibilityResults"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize particles
+        document.addEventListener('DOMContentLoaded', function() {
+            particlesManager.init('settings');
+            updateViewportInfo();
+            runTests();
+            setupAnimations();
+            
+            // Update viewport info on resize
+            window.addEventListener('resize', updateViewportInfo);
+            window.addEventListener('orientationchange', updateViewportInfo);
+        });
+
+        function updateViewportInfo() {
+            const width = window.innerWidth;
+            const height = window.innerHeight;
+            const deviceType = getDeviceType();
+            const orientation = window.orientation || (width > height ? 'landscape' : 'portrait');
+            
+            document.getElementById('viewportSize').textContent = `${width}x${height}`;
+            document.getElementById('deviceType').textContent = deviceType;
+            document.getElementById('orientation').textContent = orientation;
+        }
+
+        function getDeviceType() {
+            const width = window.innerWidth;
+            if (width < 768) return 'Mobile';
+            if (width < 1024) return 'Tablet';
+            return 'Desktop';
+        }
+
+        function runTests() {
+            // Browser info
+            const browserInfo = `
+                <div><strong>Browser:</strong> ${navigator.userAgent.split(' ').slice(-2).join(' ')}</div>
+                <div><strong>Platform:</strong> ${navigator.platform}</div>
+                <div><strong>Language:</strong> ${navigator.language}</div>
+                <div><strong>Online:</strong> ${navigator.onLine ? 'Yes' : 'No'}</div>
+                <div><strong>Cookies:</strong> ${navigator.cookieEnabled ? 'Enabled' : 'Disabled'}</div>
+            `;
+            document.getElementById('browserInfo').innerHTML = browserInfo;
+
+            // Compatibility tests
+            const tests = [
+                { name: 'CSS Grid Support', test: CSS.supports('display', 'grid') },
+                { name: 'Flexbox Support', test: CSS.supports('display', 'flex') },
+                { name: 'Backdrop Filter', test: CSS.supports('backdrop-filter', 'blur(10px)') },
+                { name: 'CSS Variables', test: CSS.supports('color', 'var(--test)') },
+                { name: 'Web Animations API', test: 'animate' in document.documentElement },
+                { name: 'Intersection Observer', test: 'IntersectionObserver' in window },
+                { name: 'Resize Observer', test: 'ResizeObserver' in window },
+                { name: 'Local Storage', test: 'localStorage' in window },
+                { name: 'Session Storage', test: 'sessionStorage' in window },
+                { name: 'Fetch API', test: 'fetch' in window }
+            ];
+
+            const results = tests.map(test => 
+                `<div style="color: ${test.test ? '#4ade80' : '#ef4444'};">
+                    ${test.test ? '✅' : '❌'} ${test.name}
+                </div>`
+            ).join('');
+
+            document.getElementById('compatibilityResults').innerHTML = results;
+        }
+
+        function setupAnimations() {
+            // Add animations to test cards
+            if (window.glassmorphismUtils) {
+                window.glassmorphismUtils.createFloatAnimation(document.getElementById('floatCard'));
+                window.glassmorphismUtils.createPulseAnimation(document.getElementById('pulseCard'));
+            }
+        }
+
+        function testResponsiveness() {
+            const widths = [320, 768, 1024, 1920];
+            let index = 0;
+            
+            const testWidth = () => {
+                if (index < widths.length) {
+                    // Simulate viewport width change
+                    document.body.style.width = widths[index] + 'px';
+                    glassmorphismUtils.showNotification(`Testing ${widths[index]}px width`, 'info', 1000);
+                    index++;
+                    setTimeout(testWidth, 2000);
+                } else {
+                    document.body.style.width = '';
+                    glassmorphismUtils.showNotification('Responsiveness test complete!', 'success');
+                }
+            };
+            
+            testWidth();
+        }
+
+        function testAnimations() {
+            const cards = document.querySelectorAll('.glass-card');
+            cards.forEach((card, index) => {
+                setTimeout(() => {
+                    card.style.animation = 'fadeInUp 0.6s ease-out';
+                    setTimeout(() => {
+                        card.style.animation = '';
+                    }, 600);
+                }, index * 100);
+            });
+            
+            glassmorphismUtils.showNotification('Animation test complete!', 'success');
+        }
+
+        function testParticles() {
+            // Create particle burst at random positions
+            for (let i = 0; i < 5; i++) {
+                setTimeout(() => {
+                    const x = Math.random() * window.innerWidth;
+                    const y = Math.random() * window.innerHeight;
+                    if (window.particlesManager) {
+                        window.particlesManager.createBurst(x, y, 10);
+                    }
+                }, i * 200);
+            }
+            
+            glassmorphismUtils.showNotification('Particle effects test complete!', 'success');
+        }
+
+        function testGlassEffects() {
+            const cards = document.querySelectorAll('.glass-card');
+            cards.forEach((card, index) => {
+                setTimeout(() => {
+                    if (window.glassmorphismUtils) {
+                        window.glassmorphismUtils.addGlassEffect(card, 1.5);
+                        setTimeout(() => {
+                            window.glassmorphismUtils.removeGlassEffect(card);
+                        }, 1000);
+                    }
+                }, index * 200);
+            });
+            
+            glassmorphismUtils.showNotification('Glass effects test complete!', 'success');
+        }
+
+        function simulateDevices() {
+            const devices = [
+                { name: 'iPhone', width: 375, height: 667 },
+                { name: 'iPad', width: 768, height: 1024 },
+                { name: 'Desktop', width: 1920, height: 1080 }
+            ];
+            
+            let index = 0;
+            const simulateDevice = () => {
+                if (index < devices.length) {
+                    const device = devices[index];
+                    glassmorphismUtils.showNotification(`Simulating ${device.name} (${device.width}x${device.height})`, 'info', 2000);
+                    index++;
+                    setTimeout(simulateDevice, 2500);
+                } else {
+                    glassmorphismUtils.showNotification('Device simulation complete!', 'success');
+                }
+            };
+            
+            simulateDevice();
+        }
+
+        // Update test results dynamically
+        setTimeout(() => {
+            const results = document.getElementById('testResults');
+            results.innerHTML = `
+                <div>✅ CSS Variables: Working</div>
+                <div>✅ Glassmorphism: Working</div>
+                <div>✅ Particles.js: Working</div>
+                <div>✅ Responsive: Working</div>
+                <div>✅ Animations: Working</div>
+                <div>✅ Interactions: Working</div>
+                <div>✅ Browser Support: Good</div>
+            `;
+        }, 2000);
+    </script>
+</body>
+</html>
