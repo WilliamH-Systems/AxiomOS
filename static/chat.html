@@ -10,6 +10,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <!-- Particles.js CDN -->
     <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+    <!-- AxiomOS Configuration -->
+    <script src="/static/js/config.js"></script>
 </head>
 <body>
     <!-- Particles.js Background -->
@@ -58,7 +60,7 @@
                     <span id="statusText" style="color: var(--text-secondary); font-size: 0.9rem;">Connecting...</span>
                 </div>
                 <div style="color: var(--text-muted); font-size: 0.8rem; margin-top: 0.5rem;">
-                    Model: Groq LLaMA 3.1
+                    Model: Groq LLaMA 3.3
                 </div>
             </div>
 
@@ -207,11 +209,9 @@
 
         async function loadOrCreateSession() {
             try {
-                const response = await fetch('/api/sessions', {
+                const response = await AxiomOSConfig.apiRequest('sessions', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
+                    body: JSON.stringify({})
                 });
                 
                 if (response.ok) {
@@ -246,11 +246,8 @@
             showTypingIndicator();
             
             try {
-                const response = await fetch('/api/chat', {
+                const response = await AxiomOSConfig.apiRequest('chat', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
                     body: JSON.stringify({
                         message: message,
                         session_id: currentSessionId
@@ -337,7 +334,7 @@
             if (!currentSessionId) return;
             
             try {
-                const response = await fetch(`/api/sessions/${currentSessionId}/messages`);
+                const response = await AxiomOSConfig.apiRequest(`sessions/${currentSessionId}/messages`);
                 if (response.ok) {
                     const messages = await response.json();
                     const chatMessages = document.getElementById('chatMessages');
@@ -367,7 +364,7 @@
 
         async function loadSessionsList() {
             try {
-                const response = await fetch('/api/sessions');
+                const response = await AxiomOSConfig.apiRequest('sessions');
                 if (response.ok) {
                     const sessions = await response.json();
                     const sessionList = document.getElementById('sessionList');
@@ -434,7 +431,7 @@
 
         async function checkServerHealth() {
             try {
-                const response = await fetch('/api/health');
+                const response = await AxiomOSConfig.apiRequest('health');
                 if (response.ok) {
                     updateStatus('Connected', '#4ade80');
                 } else {
