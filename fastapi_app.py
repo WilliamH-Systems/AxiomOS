@@ -128,6 +128,12 @@ async def health_check():
     return health_status
 
 
+@app.get("/api/health")
+async def api_health_check():
+    """API health check for frontend"""
+    return await health_check()
+
+
 @app.post("/chat", response_model=AgentResponseModel)
 async def chat(request: AgentRequestModel):
     """Regular chat endpoint without streaming"""
@@ -136,6 +142,12 @@ async def chat(request: AgentRequestModel):
         return response
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Chat processing failed: {str(e)}")
+
+
+@app.post("/api/chat", response_model=AgentResponseModel)
+async def api_chat(request: AgentRequestModel):
+    """API chat endpoint for frontend"""
+    return await chat(request)
 
 
 @app.post("/chat/stream")
@@ -181,6 +193,58 @@ async def get_session(session_id: str):
         raise HTTPException(status_code=500, detail=f"Failed to get session: {str(e)}")
 
 
+@app.post("/api/sessions")
+async def create_session():
+    """Create a new session"""
+    import uuid
+    session_id = str(uuid.uuid4())
+    
+    # Initialize session data
+    session_data = {
+        "session_id": session_id,
+        "created_at": datetime.utcnow().isoformat(),
+        "messages": [],
+        "status": "active"
+    }
+    
+    # Store session
+    redis_manager.set_session_data(session_id, session_data)
+    
+    return {"session_id": session_id, "status": "created"}
+
+
+@app.get("/api/sessions")
+async def list_sessions():
+    """List all sessions (mock implementation for now)"""
+    # This is a simplified implementation
+    # In production, you'd want to store session metadata separately
+    return {
+        "sessions": [
+            {
+                "session_id": "demo-session-1",
+                "title": "Demo Chat Session",
+                "created_at": datetime.utcnow().isoformat(),
+                "message_count": 5
+            }
+        ]
+    }
+
+
+@app.get("/api/sessions/{session_id}/messages")
+async def get_session_messages(session_id: str):
+    """Get messages for a session"""
+    try:
+        session_data = redis_manager.get_session_data(session_id)
+        if not session_data:
+            raise HTTPException(status_code=404, detail="Session not found")
+        
+        return session_data.get("messages", [])
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get messages: {str(e)}")
+
+
 @app.delete("/session/{session_id}")
 async def delete_session(session_id: str):
     """Delete a session"""
@@ -224,6 +288,72 @@ async def get_user_memory(user_id: int):
             db_session.close()
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to get memory: {str(e)}")
+
+
+@app.get("/api/memories")
+async def api_get_memories():
+    """Get memories for frontend (mock implementation)"""
+    # Mock memory data for now
+    return [
+        {
+            "id": "mem-1",
+            "title": "User Preferences",
+            "content": "User prefers concise responses and likes technical details",
+            "type": "long_term",
+            "category": "preferences",
+            "created_at": datetime.utcnow().isoformat()
+        },
+        {
+            "id": "mem-2", 
+            "title": "Project Context",
+            "content": "Working on AxiomOS AI assistant with glassmorphism design",
+            "type": "session",
+            "category": "work",
+            "created_at": datetime.utcnow().isoformat()
+        }
+    ]
+
+
+@app.get("/api/memories/categories")
+async def api_get_memory_categories():
+    """Get memory categories for frontend"""
+    return [
+        {"name": "preferences", "count": 5},
+        {"name": "work", "count": 3},
+        {"name": "personal", "count": 2},
+        {"name": "technical", "count": 8}
+    ]
+
+
+@app.get("/api/memories/export")
+async def api_export_memories():
+    """Export memories (mock implementation)"""
+    import json
+    from fastapi.responses import Response
+    
+    memories = await api_get_memories()
+    
+    # Create JSON response for download
+    json_data = json.dumps(memories, indent=2)
+    return Response(
+        content=json_data,
+        media_type="application/json",
+        headers={"Content-Disposition": "attachment; filename=axiomos-memories.json"}
+    )
+
+
+@app.delete("/api/memories/session")
+async def api_clear_session_memories():
+    """Clear session memories"""
+    # Mock implementation
+    return {"message": "Session memories cleared successfully"}
+
+
+@app.delete("/api/memories/{memory_id}")
+async def api_delete_memory(memory_id: str):
+    """Delete a specific memory"""
+    # Mock implementation
+    return {"message": f"Memory {memory_id} deleted successfully"}
 
 
 @app.post("/memory/{user_id}")

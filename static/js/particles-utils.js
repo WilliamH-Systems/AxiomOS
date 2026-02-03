@@ -8,10 +8,10 @@ class ParticlesManager {
         this.defaultConfig = {
             "particles": {
                 "number": {
-                    "value": 100,
+                    "value": 50,  // Reduced from 100 for better performance
                     "density": {
                         "enable": true,
-                        "value_area": 800
+                        "value_area": 1000  // Increased area to spread particles more
                     }
                 },
                 "color": {
@@ -21,7 +21,7 @@ class ParticlesManager {
                     "type": "circle"
                 },
                 "opacity": {
-                    "value": 0.5,
+                    "value": 0.4,  // Reduced opacity for less visual load
                     "random": false,
                     "anim": {
                         "enable": false,
@@ -31,7 +31,7 @@ class ParticlesManager {
                     }
                 },
                 "size": {
-                    "value": 3,
+                    "value": 2,  // Smaller particles
                     "random": true,
                     "anim": {
                         "enable": false,
@@ -42,14 +42,14 @@ class ParticlesManager {
                 },
                 "line_linked": {
                     "enable": true,
-                    "distance": 150,
+                    "distance": 120,  // Reduced distance
                     "color": "#d1daff",
-                    "opacity": 0.4,
+                    "opacity": 0.2,  // Reduced opacity
                     "width": 1
                 },
                 "move": {
                     "enable": true,
-                    "speed": 2,
+                    "speed": 1.5,  // Slower movement
                     "direction": "none",
                     "random": false,
                     "straight": false,
@@ -70,31 +70,31 @@ class ParticlesManager {
                         "mode": "repulse"
                     },
                     "onclick": {
-                        "enable": true,
+                        "enable": false,  // Disabled for performance
                         "mode": "push"
                     },
                     "resize": true
                 },
                 "modes": {
                     "grab": {
-                        "distance": 180,
+                        "distance": 140,  // Reduced distance
                         "line_linked": {
                             "opacity": 1
                         }
                     },
                     "bubble": {
-                        "distance": 400,
-                        "size": 40,
+                        "distance": 200,  // Reduced distance
+                        "size": 20,  // Smaller bubbles
                         "duration": 2,
-                        "opacity": 8,
+                        "opacity": 4,
                         "speed": 3
                     },
                     "repulse": {
-                        "distance": 180,
+                        "distance": 100,  // Reduced distance
                         "duration": 0.4
                     },
                     "push": {
-                        "particles_nb": 4
+                        "particles_nb": 2  // Reduced from 4
                     },
                     "remove": {
                         "particles_nb": 2
@@ -126,28 +126,28 @@ class ParticlesManager {
         const configs = {
             'home': {
                 particles: {
-                    number: { value: 120, density: { value_area: 650 } },
+                    number: { value: 60, density: { value_area: 900 } },  // Reduced from 120
                     color: { value: "#45e2f2" },
-                    opacity: { value: 0.6 },
-                    size: { value: 3, random: true },
-                    line_linked: { distance: 150, color: "#d1daff", opacity: 0.4 },
-                    move: { speed: 2.7 }
+                    opacity: { value: 0.5 },
+                    size: { value: 2.5, random: true },  // Smaller
+                    line_linked: { distance: 130, color: "#d1daff", opacity: 0.3 },
+                    move: { speed: 2 }  // Slower
                 },
                 interactivity: {
                     events: {
                         onhover: { enable: true, mode: "repulse" },
-                        onclick: { enable: true, mode: "push" }
+                        onclick: { enable: false }  // Disabled for performance
                     }
                 }
             },
             'chat': {
                 particles: {
-                    number: { value: 80, density: { value_area: 800 } },
+                    number: { value: 40, density: { value_area: 1000 } },  // Reduced from 80
                     color: { value: "#45e2f2" },
-                    opacity: { value: 0.5 },
-                    size: { value: 2, random: true },
-                    line_linked: { distance: 120, color: "#d1daff", opacity: 0.3 },
-                    move: { speed: 2 }
+                    opacity: { value: 0.3 },
+                    size: { value: 1.5, random: true },  // Smaller
+                    line_linked: { distance: 100, color: "#d1daff", opacity: 0.2 },
+                    move: { speed: 1.5 }  // Slower
                 },
                 interactivity: {
                     events: {
@@ -158,12 +158,12 @@ class ParticlesManager {
             },
             'memory': {
                 particles: {
-                    number: { value: 100, density: { value_area: 700 } },
+                    number: { value: 45, density: { value_area: 950 } },  // Reduced from 100
                     color: { value: "#45e2f2" },
-                    opacity: { value: 0.4 },
-                    size: { value: 2.5, random: true },
-                    line_linked: { distance: 130, color: "#d1daff", opacity: 0.3 },
-                    move: { speed: 2.2 }
+                    opacity: { value: 0.3 },
+                    size: { value: 2, random: true },  // Smaller
+                    line_linked: { distance: 110, color: "#d1daff", opacity: 0.2 },
+                    move: { speed: 1.8 }  // Slower
                 },
                 interactivity: {
                     events: {
@@ -174,16 +174,16 @@ class ParticlesManager {
             },
             'settings': {
                 particles: {
-                    number: { value: 60, density: { value_area: 800 } },
+                    number: { value: 30, density: { value_area: 1200 } },  // Reduced from 60
                     color: { value: "#45e2f2" },
-                    opacity: { value: 0.3 },
-                    size: { value: 2, random: true },
-                    line_linked: { distance: 140, color: "#d1daff", opacity: 0.2 },
-                    move: { speed: 1.8 }
+                    opacity: { value: 0.2 },
+                    size: { value: 1.5, random: true },  // Smaller
+                    line_linked: { distance: 100, color: "#d1daff", opacity: 0.15 },
+                    move: { speed: 1.2 }  // Slower
                 },
                 interactivity: {
                     events: {
-                        onhover: { enable: true, mode: "repulse" },
+                        onhover: { enable: false },  // Disabled for settings page
                         onclick: { enable: false }
                     }
                 }

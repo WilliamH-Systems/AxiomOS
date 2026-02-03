@@ -6,9 +6,20 @@
 const AxiomOSConfig = {
     // API Configuration
     api: {
-        baseURL: window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
-            ? 'http://localhost:8000' 
-            : '', // Production: same origin
+        baseURL: (() => {
+            // For Render deployment, API and static files are served from the same origin
+            // For local development, API is on port 8000, static on 8080
+            const hostname = window.location.hostname;
+            const port = window.location.port;
+            
+            if (hostname === 'localhost' || hostname === '127.0.0.1') {
+                // Local development - API on port 8000
+                return 'http://localhost:8000';
+            } else {
+                // Production (Render) - same origin
+                return '';
+            }
+        })(),
         endpoints: {
             health: '/api/health',
             sessions: '/api/sessions',
