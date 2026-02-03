@@ -40,13 +40,9 @@ class AxiomOSAgent:
         state = self._authenticate(initial_state)
         state = self._load_memory(state)
         state = self._process_message(state)
-        # If this request is a deletion request, process deletion before any saving
-        if state.user_id and state.context.get("processing_delete"):
-            state = self._process_memory_deletion(state)
-            state = self._load_memory(state)
-
-        state = self._save_memory(state)
+        state = self._execute_command(state)
         state = self._respond(state)
+        state = self._save_memory(state)
 
         return AgentResponseModel(
             response=state.messages[-1] if state.messages else "No response generated",
@@ -89,6 +85,199 @@ class AxiomOSAgent:
 
         return state
 
+    def _execute_command(self, state: AgentState) -> AgentState:
+        """Execute slash command operations before LLM response"""
+        command = state.context.get("command")
+        if not command:
+            return state
+
+        if command == "save":
+            state = self._command_save(state)
+        elif command == "recall":
+            state = self._command_recall(state)
+        elif command == "delete":
+            state = self._command_delete(state)
+        elif command == "clear":
+            state = self._command_clear(state)
+        else:
+            state.context["command_result"] = (
+                f"Unknown command '/{command}'. Available commands: /save, /recall, /delete, /clear."
+            )
+
+        # Skip automatic LLM reply and memory save for command interactions
+        state.context["skip_llm_response"] = True
+        state.context["skip_memory_save"] = True
+        # Remove command flag so it doesn't persist
+        state.context.pop("command", None)
+        state.context.pop("command_arg", None)
+        return state
+
+    def _command_save(self, state: AgentState) -> AgentState:
+        if not state.user_id:
+            state.context["command_result"] = "Cannot save memory: user not authenticated."
+            return state
+
+        messages_to_save = state.messages[:-1] if len(state.messages) > 1 else []
+        context_snapshot = dict(state.context)
+        context_snapshot.pop("command_result", None)
+        context_snapshot.pop("skip_llm_response", None)
+
+        db_session = db_manager.get_session()
+        try:
+            memory_key = f"memory_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+            memory_value = {
+                "messages": messages_to_save,
+                "context": context_snapshot,
+                "created_by": "manual_save",
+            }
+            new_memory = DBMemory(
+                user_id=state.user_id,
+                key=memory_key,
+                value=json.dumps(memory_value),
+            )
+            db_session.add(new_memory)
+            db_session.commit()
+            state.context["command_result"] = (
+                f"Memory saved as '{memory_key}'."
+            )
+            # Refresh long-term memory cache
+            state = self._load_memory(state)
+        except Exception as e:
+            state.context["command_result"] = f"Failed to save memory: {str(e)}"
+        finally:
+            db_session.close()
+
+        return state
+
+    def _command_recall(self, state: AgentState) -> AgentState:
+        memories = state.long_term_memory or {}
+        command_arg = state.context.get("command_arg")
+
+        if not memories:
+            state.context["command_result"] = "No memories available to recall."
+            return state
+
+        if command_arg:
+            key = command_arg.strip()
+            memory_value = memories.get(key)
+            if not memory_value:
+                state.context["command_result"] = f"Memory '{key}' not found."
+                return state
+            summary = self._format_memory_preview(key, memory_value)
+            state.context["command_result"] = summary
+            return state
+
+        # No specific key; provide list summary
+        summaries = []
+        for idx, (key, value) in enumerate(memories.items()):
+            summaries.append(self._format_memory_preview(key, value, include_details=False))
+            if idx >= 9:
+                summaries.append("... (showing first 10 memories)")
+                break
+
+        state.context["command_result"] = "\n".join(summaries)
+        return state
+
+    def _command_delete(self, state: AgentState) -> AgentState:
+        command_arg = state.context.get("command_arg")
+        if not command_arg:
+            state.context["command_result"] = "Please specify which memory to delete. Usage: /delete <memory_key>."
+            return state
+
+        if not state.user_id:
+            state.context["command_result"] = "Cannot delete memory: user not authenticated."
+            return state
+
+        key = command_arg.strip()
+        db_session = db_manager.get_session()
+        try:
+            deleted_count = (
+                db_session.query(DBMemory)
+                .filter(DBMemory.user_id == state.user_id, DBMemory.key == key)
+                .delete()
+            )
+            db_session.commit()
+
+            if deleted_count:
+                state.context["command_result"] = f"Memory '{key}' deleted."
+                state.long_term_memory.pop(key, None)
+            else:
+                state.context["command_result"] = f"Memory '{key}' not found."
+        except Exception as e:
+            state.context["command_result"] = f"Failed to delete memory '{key}': {str(e)}"
+        finally:
+            db_session.close()
+
+        return state
+
+    def _command_clear(self, state: AgentState) -> AgentState:
+        state.context["needs_clear_confirmation"] = True
+        state.context["command_result"] = (
+            "You are requesting to clear ALL memories. Please confirm with '/clear confirm' to proceed."
+        )
+
+        command_arg = state.context.get("command_arg", "").lower()
+        if command_arg == "confirm":
+            if not state.user_id:
+                state.context["command_result"] = "Cannot clear memories: user not authenticated."
+                state.context.pop("needs_clear_confirmation", None)
+                return state
+
+            db_session = db_manager.get_session()
+            try:
+                deleted_count = (
+                    db_session.query(DBMemory)
+                    .filter(DBMemory.user_id == state.user_id)
+                    .delete()
+                )
+                db_session.commit()
+                state.long_term_memory = {}
+                state.context["command_result"] = (
+                    f"All memories cleared ({deleted_count} deleted)."
+                )
+            except Exception as e:
+                state.context["command_result"] = f"Failed to clear memories: {str(e)}"
+            finally:
+                db_session.close()
+
+            state.context.pop("needs_clear_confirmation", None)
+
+        return state
+
+    def _format_memory_preview(self, key: str, value: Any, include_details: bool = True) -> str:
+        try:
+            if isinstance(value, str):
+                parsed = json.loads(value)
+            else:
+                parsed = value
+        except Exception:
+            parsed = value
+
+        if isinstance(parsed, dict):
+            meta = []
+            if "created_by" in parsed:
+                meta.append(f"created_by={parsed['created_by']}")
+            if "context" in parsed and isinstance(parsed["context"], dict):
+                meta.append(f"context_keys={len(parsed['context'])}")
+
+            messages = parsed.get("messages", [])
+            snippet = ""
+            if messages:
+                first_msg = messages[0]
+                if isinstance(first_msg, dict):
+                    content = first_msg.get("content") or str(first_msg)
+                else:
+                    content = str(first_msg)
+                snippet = content[:120]
+
+            base = f"{key}: {snippet}" if snippet else f"{key}: [no preview]"
+            if include_details and meta:
+                base += f" ({', '.join(meta)})"
+            return base
+
+        # Fallback for non-dict values
+        return f"{key}: {str(value)[:120]}"
+
     def _load_memory(self, state: AgentState) -> AgentState:
         """Load session and long-term memory"""
         # Load session memory from Redis
@@ -124,33 +313,64 @@ class AxiomOSAgent:
         last_message = state.messages[-1]
 
         # Reset per-request command flags (they may persist in Redis session context)
-        for flag in ("processing_remember", "processing_recall", "processing_delete"):
-            if flag in state.context:
-                state.context.pop(flag, None)
-
-        # Detect special commands
-        if "remember" in last_message.lower():
-            state.context["processing_remember"] = True
-        elif "recall" in last_message.lower():
-            state.context["processing_recall"] = True
-        elif "delete" in last_message.lower() and (
-            "memory" in last_message.lower() or "memories" in last_message.lower()
+        for flag in (
+            "processing_remember",
+            "processing_recall",
+            "processing_delete",
+            "command",
+            "command_arg",
+            "skip_llm_response",
+            "command_result",
         ):
+            state.context.pop(flag, None)
+
+        message_text = last_message.strip()
+
+        # Detect slash commands (/save, /recall, /delete, /clear)
+        if message_text.startswith("/") and len(message_text) > 1:
+            parts = message_text[1:].split(maxsplit=1)
+            command = parts[0].lower()
+            arg = parts[1].strip() if len(parts) > 1 else ""
+            state.context["command"] = command
+            if arg:
+                state.context["command_arg"] = arg
+            return state
+
+        # Detect legacy keywords for backwards compatibility (no slash)
+        lowered = message_text.lower()
+        if "remember" in lowered:
+            state.context["processing_remember"] = True
+        elif "recall" in lowered:
+            state.context["processing_recall"] = True
+        elif "delete" in lowered and ("memory" in lowered or "memories" in lowered):
             state.context["processing_delete"] = True
 
         return state
 
     def _save_memory(self, state: AgentState) -> AgentState:
         """Save memory to Redis and PostgreSQL"""
-        # Save session context to Redis
+        # Save session context to Redis (omit ephemeral keys)
         if state.session_id and state.context:
+            ephemeral_keys = {
+                "command_result",
+                "skip_llm_response",
+                "skip_memory_save",
+                "needs_clear_confirmation",
+                "command",
+                "command_arg",
+            }
+            sanitized_context = {
+                key: value
+                for key, value in state.context.items()
+                if key not in ephemeral_keys
+            }
             redis_manager.set_session_data(
-                state.session_id, {"context": state.context}, ttl=config.session_timeout
+                state.session_id, {"context": sanitized_context}, ttl=config.session_timeout
             )
 
-        # Never create new memories on a deletion request.
-        # (Otherwise we can save and delete in the same request, and flags can override responses.)
-        if state.context.get("processing_delete"):
+        # Never create new memories on a deletion request or when explicitly skipped.
+        if state.context.get("processing_delete") or state.context.get("skip_memory_save"):
+            state.context.pop("skip_memory_save", None)
             return state
 
         # Auto-save conversations after every few messages
@@ -399,6 +619,20 @@ Your response must be exactly one of the three formats above.
 
         last_message = state.messages[-1]
 
+        # Handle command responses without calling the LLM
+        if state.context.get("skip_llm_response"):
+            response = state.context.get(
+                "command_result", "Command executed."
+            )
+            if response and isinstance(response, str):
+                state.messages.append(response)
+
+            # Clean ephemeral flags
+            state.context.pop("skip_llm_response", None)
+            state.context.pop("command_result", None)
+            state.context.pop("needs_clear_confirmation", None)
+            return state
+
         # Use Groq for intelligent responses
         try:
             # Build conversation context
@@ -435,8 +669,7 @@ Your response must be exactly one of the three formats above.
 
             response = chat_completion.choices[0].message.content
 
-            # Handle special commands
-            # Deletion must take precedence to avoid being overridden by other flags.
+            # Handle legacy keyword commands (non-slash)
             if state.context.get("processing_delete"):
                 delete_result = state.context.get(
                     "delete_result", "Memory deletion request processed."
@@ -526,6 +759,16 @@ Your response must be exactly one of the three formats above.
         if response and isinstance(response, str):
             state.messages.append(response)
 
+        # Clear transient flags after response
+        for flag in (
+            "processing_delete",
+            "processing_recall",
+            "processing_remember",
+            "delete_result",
+            "skip_memory_save",
+        ):
+            state.context.pop(flag, None)
+
         return state
 
     async def run_stream(self, request: AgentRequestModel) -> TokenStream:
@@ -538,7 +781,24 @@ Your response must be exactly one of the three formats above.
         state = self._authenticate(initial_state)
         state = self._load_memory(state)
         state = self._process_message(state)
-        state = self._save_memory(state)
+        state = self._execute_command(state)
+
+        # If command handled the response, bypass streaming LLM
+        if state.context.get("skip_llm_response"):
+            response = state.context.get("command_result", "Command executed.")
+            yield StreamChunkModel(
+                token=response,
+                session_id=state.session_id,
+                is_complete=True,
+                final_response=response,
+            )
+            state.context.pop("skip_llm_response", None)
+            state.context.pop("command_result", None)
+            state.context.pop("needs_clear_confirmation", None)
+            state.context.pop("skip_memory_save", None)
+            state.messages.append(response)
+            state = self._save_memory(state)
+            return
 
         # Now stream the response
         try:
@@ -634,12 +894,17 @@ Your response must be exactly one of the three formats above.
             # Save the final response
             if full_response:
                 state.messages.append(full_response)
-            if state.session_id and state.context:
-                redis_manager.set_session_data(
-                    state.session_id,
-                    {"context": state.context},
-                    ttl=config.session_timeout,
-                )
+            state = self._save_memory(state)
+
+            # Clear transient flags to keep context tidy
+            for flag in (
+                "processing_delete",
+                "processing_recall",
+                "processing_remember",
+                "delete_result",
+                "skip_memory_save",
+            ):
+                state.context.pop(flag, None)
 
         except Exception as e:
             # Fallback response
