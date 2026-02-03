@@ -132,13 +132,24 @@ class MemoryService:
             memory_key = (
                 f"conversation_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}"
             )
+            # Process messages to ensure they have proper content
+            processed_messages = []
+            for msg in messages:
+                if hasattr(msg, 'content'):
+                    processed_messages.append({
+                        "content": msg.content, 
+                        "role": msg.role.value if hasattr(msg.role, 'value') else str(msg.role)
+                    })
+                elif isinstance(msg, str):
+                    processed_messages.append({"content": msg, "role": "user"})
+                elif isinstance(msg, dict):
+                    processed_messages.append(msg)
+                else:
+                    processed_messages.append({"content": str(msg), "role": "unknown"})
+            
+            # Save all messages, not just the last 5
             memory_value = {
-                "messages": [
-                    {"content": msg.content, "role": msg.role.value}
-                    if hasattr(msg, "content")
-                    else msg
-                    for msg in messages[-5:]
-                ],
+                "messages": processed_messages,
                 "context": context,
             }
 

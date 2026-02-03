@@ -138,14 +138,39 @@ class AxiomOSAgent:
                 state.session_id, {"context": state.context}, ttl=config.session_timeout
             )
 
-        # Save important data to long-term memory
+        # Auto-save conversations after every few messages
+        if state.user_id and len(state.messages) >= 2:  # Save after at least 2 messages
+            db_session = db_manager.get_session()
+            try:
+                memory_key = f"conversation_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+                # Save all messages with proper formatting
+                memory_value = {
+                    "messages": state.messages if len(state.messages) > 0 else [],
+                    "context": state.context,
+                    "auto_saved": True,
+                }
+
+                new_memory = DBMemory(
+                    user_id=state.user_id,
+                    key=memory_key,
+                    value=json.dumps(memory_value),
+                )
+                db_session.add(new_memory)
+                db_session.commit()
+
+            finally:
+                db_session.close()
+
+        # Save important data to long-term memory (explicit remember command)
         if state.user_id and state.context.get("processing_remember"):
             db_session = db_manager.get_session()
             try:
                 memory_key = f"conversation_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+                # Save all messages, not just the last 5, and include single messages
                 memory_value = {
-                    "messages": state.messages[-5:] if len(state.messages) > 1 else [],
+                    "messages": state.messages if len(state.messages) > 0 else [],
                     "context": state.context,
+                    "explicitly_saved": True,
                 }
 
                 new_memory = DBMemory(
@@ -411,11 +436,25 @@ Your response must be exactly one of the three formats above.
                                                     isinstance(msg, dict)
                                                     and "content" in msg
                                                 ):
-                                                    msg_texts.append(
-                                                        f'"{msg["content"]}"'
-                                                    )
+                                                    role = msg.get("role", "unknown")
+                                                    content = msg.get("content", "")
+                                                    msg_texts.append(f'{role}: "{content}"')
+                                                elif isinstance(msg, dict) and "role" in msg:
+                                                    # Handle different message formats
+                                                    role = msg.get("role", "unknown")
+                                                    msg_content = str(msg.get("content", msg))
+                                                    msg_texts.append(f'{role}: "{msg_content}"')
+                                                else:
+                                                    msg_texts.append(f'"{str(msg)}"')
+                                            
+                                            # Create a readable summary
+                                            if len(msg_texts) > 3:
+                                                preview = "; ".join(msg_texts[:2]) + f"; ... (+{len(msg_texts)-2} more)"
+                                            else:
+                                                preview = "; ".join(msg_texts)
+                                            
                                             memory_content.append(
-                                                f"Memory '{key}': {', '.join(msg_texts)}"
+                                                f"Memory '{key}': {preview}"
                                             )
                                         else:
                                             memory_content.append(
@@ -423,12 +462,12 @@ Your response must be exactly one of the three formats above.
                                             )
                                     else:
                                         memory_content.append(
-                                            f"Memory '{key}': {value}"
+                                            f"Memory '{key}': {str(value)[:200]}..."
                                         )
                                 except json.JSONDecodeError:
                                     memory_content.append(f"Memory '{key}': {value}")
                             else:
-                                memory_content.append(f"Memory '{key}': {value}")
+                                memory_content.append(f"Memory '{key}': {str(value)[:200]}...")
                         except Exception as e:
                             memory_content.append(
                                 f"Memory '{key}': Error reading content - {e}"
@@ -436,15 +475,15 @@ Your response must be exactly one of the three formats above.
 
                     if memory_content:
                         memory_info = (
-                            "\\n\\nHere's what I remember about you:\\n"
-                            + "\\n".join(memory_content)
+                            "\n\nHere's what I remember about you:\n"
+                            + "\n".join(memory_content)
                         )
                     else:
                         memory_info = (
-                            "\\n\\nI found memories but couldn't extract their content."
+                            "\n\nI found memories but couldn't extract their content."
                         )
                 else:
-                    memory_info = "\\n\\nI don't have any memories stored about you."
+                    memory_info = "\n\nI don't have any memories stored about you."
 
                 response += memory_info
             elif state.context.get("processing_remember"):
