@@ -40,6 +40,11 @@ class AxiomOSAgent:
         state = self._authenticate(initial_state)
         state = self._load_memory(state)
         state = self._process_message(state)
+        # If this request is a deletion request, process deletion before any saving
+        if state.user_id and state.context.get("processing_delete"):
+            state = self._process_memory_deletion(state)
+            state = self._load_memory(state)
+
         state = self._save_memory(state)
         state = self._respond(state)
 
@@ -118,6 +123,11 @@ class AxiomOSAgent:
 
         last_message = state.messages[-1]
 
+        # Reset per-request command flags (they may persist in Redis session context)
+        for flag in ("processing_remember", "processing_recall", "processing_delete"):
+            if flag in state.context:
+                state.context.pop(flag, None)
+
         # Detect special commands
         if "remember" in last_message.lower():
             state.context["processing_remember"] = True
@@ -137,6 +147,11 @@ class AxiomOSAgent:
             redis_manager.set_session_data(
                 state.session_id, {"context": state.context}, ttl=config.session_timeout
             )
+
+        # Never create new memories on a deletion request.
+        # (Otherwise we can save and delete in the same request, and flags can override responses.)
+        if state.context.get("processing_delete"):
+            return state
 
         # Auto-save conversations after every few messages
         if state.user_id and len(state.messages) >= 2:  # Save after at least 2 messages
@@ -183,10 +198,6 @@ class AxiomOSAgent:
 
             finally:
                 db_session.close()
-
-        # Process memory deletion requests
-        if state.user_id and state.context.get("processing_delete"):
-            state = self._process_memory_deletion(state)
 
         return state
 
@@ -239,8 +250,21 @@ class AxiomOSAgent:
                     memory_list.append(f"{key}: {str(value)[:100]}...")
 
             memories_text = "\n".join(memory_list)
+            
+            # Check for explicit "delete all" patterns first
+            delete_all_patterns = [
+                "delete all memories", "clear all memories", "remove everything",
+                "delete all", "clear memories", "remove all memories",
+                "delete everything", "clear all", "remove all"
+            ]
+            
+            user_request_lower = last_message.lower()
+            is_explicit_delete_all = any(pattern in user_request_lower for pattern in delete_all_patterns)
+            
+            if is_explicit_delete_all:
+                return self._execute_delete_all(state, memories)
 
-            # Prompt Groq to decide about deletion
+            # Prompt Groq to decide about deletion for specific cases
             decision_prompt = f"""
 You are AxiomOS, a personal assistant. The user wants to delete memories. You must decide this carefully.
 
@@ -280,7 +304,7 @@ Your response must be exactly one of the three formats above.
             decision = chat_completion.choices[0].message.content.strip()
 
             # Execute the deletion decision
-            if decision.startswith("DELETE_ALL:"):
+            if decision == "DELETE_ALL" or decision.startswith("DELETE_ALL:"):
                 return self._execute_delete_all(state, memories)
             elif decision.startswith("DELETE_SPECIFIC:"):
                 memory_key = decision.split(":", 1)[1].strip()
@@ -317,6 +341,7 @@ Your response must be exactly one of the three formats above.
                     .delete()
                 )
                 db_session.commit()
+                
                 # Clear the agent's long_term_memory state to reflect deletion
                 state.long_term_memory = {}
                 state.context["delete_result"] = (
@@ -411,7 +436,13 @@ Your response must be exactly one of the three formats above.
             response = chat_completion.choices[0].message.content
 
             # Handle special commands
-            if state.context.get("processing_recall"):
+            # Deletion must take precedence to avoid being overridden by other flags.
+            if state.context.get("processing_delete"):
+                delete_result = state.context.get(
+                    "delete_result", "Memory deletion request processed."
+                )
+                response = f"{delete_result}"
+            elif state.context.get("processing_recall"):
                 if state.long_term_memory:
                     memory_content = []
                     for key, value in state.long_term_memory.items():
@@ -488,11 +519,6 @@ Your response must be exactly one of the three formats above.
                 response += memory_info
             elif state.context.get("processing_remember"):
                 response = "I've saved our conversation to your long-term memory."
-            elif state.context.get("processing_delete"):
-                delete_result = state.context.get(
-                    "delete_result", "Memory deletion request processed."
-                )
-                response = f"{delete_result}"
 
         except Exception as e:
             response = f"I received your message: '{last_message}'. I'm AxiomOS, your personal assistant. (Note: Groq API error: {str(e)})"
