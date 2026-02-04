@@ -94,7 +94,7 @@
                     <div class="chat-messages" id="chatMessages">
                         <div class="message assistant">
                             <div class="message-content">
-                                👋 Hello! I'm your AxiomOS AI assistant. I'm here to help you with any questions or tasks you might have. What would you like to discuss today?
+                                👋 Hello! I'm your personal assistant. I'm here to help you with any questions or tasks you might have. What would you like to discuss today?
                             </div>
                             <div class="message-time">Just now</div>
                         </div>
@@ -114,6 +114,11 @@
                             <span id="sendBtnLoader" class="loading" style="display: none; margin-left: 0.5rem;"></span>
                         </button>
                     </div>
+                    <div class="web-search-toggle">
+                        <button id="webSearchButton" class="web-search-button" onclick="toggleWebSearch()">
+                            🔍 Enable Web Search
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -130,6 +135,7 @@
         let messageCount = 0;
         let sessionStartTime = Date.now();
         let isTyping = false;
+        let allowWebSearch = false;
 
         function initializeChat() {
             const messageInput = document.getElementById('messageInput');
@@ -157,6 +163,18 @@
             
             // Check server health
             checkServerHealth();
+        }
+
+        function toggleWebSearch() {
+            allowWebSearch = !allowWebSearch;
+            const btn = document.getElementById('webSearchButton');
+            if (allowWebSearch) {
+                btn.classList.add('active');
+                btn.textContent = '🔎 Web Search Enabled';
+            } else {
+                btn.classList.remove('active');
+                btn.textContent = '🔍 Enable Web Search';
+            }
         }
 
         async function loadOrCreateSession() {
@@ -202,7 +220,8 @@
                     method: 'POST',
                     body: JSON.stringify({
                         message: message,
-                        session_id: currentSessionId
+                        session_id: currentSessionId,
+                        allow_web_search: allowWebSearch
                     })
                 });
                 

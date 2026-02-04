@@ -147,10 +147,16 @@ class GroqConfig:
 
 
 @dataclass
+class TavilyConfig:
+    api_key: str = os.getenv("TAVILY_API_KEY", "")
+
+
+@dataclass
 class AxiomOSConfig:
     database: DatabaseConfig = field(default_factory=DatabaseConfig)
     redis: RedisConfig = field(default_factory=RedisConfig)
     groq: GroqConfig = field(default_factory=GroqConfig)
+    tavily: TavilyConfig = field(default_factory=TavilyConfig)
     log_level: str = os.getenv("LOG_LEVEL", "INFO")
     session_timeout: int = int(os.getenv("SESSION_TIMEOUT", "3600"))  # 1 hour
 

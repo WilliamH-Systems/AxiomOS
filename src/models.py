@@ -89,6 +89,9 @@ class AgentRequestModel(BaseModel):
         default=None, description="Additional context"
     )
     stream: bool = Field(default=False, description="Whether to stream response")
+    allow_web_search: bool = Field(
+        default=False, description="Whether to enable Tavily web search for this request"
+    )
 
     @field_validator("message")
     @classmethod

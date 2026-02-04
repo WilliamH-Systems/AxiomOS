@@ -8,6 +8,7 @@ import asyncio
 import json
 
 from groq import Groq
+from langchain_tavily import TavilySearchResults
 
 from .database import db_manager
 from .database import User as DBUser, Session as DBSession, LongTermMemory as DBMemory
@@ -29,12 +30,24 @@ class AxiomOSAgent:
     def __init__(self):
         self.groq_client = Groq(api_key=config.groq.api_key)
         self.memory = MemorySaver()
+        self.tavily_tool = None
+        if config.tavily.api_key:
+            try:
+                self.tavily_tool = TavilySearchResults(
+                    api_key=config.tavily.api_key, max_results=5
+                )
+            except Exception:
+                self.tavily_tool = None
 
     def run(self, request: AgentRequestModel) -> AgentResponseModel:
         """Simple, production-ready agent execution"""
         initial_state = AgentState(
             session_id=request.session_id, messages=[request.message]
         )
+
+        # Respect per-request web search permission
+        if request.allow_web_search:
+            initial_state.context["allow_web_search"] = True
 
         # Process through simple, reliable workflow
         state = self._authenticate(initial_state)
@@ -82,6 +95,38 @@ class AxiomOSAgent:
 
         finally:
             session_db.close()
+
+        return state
+
+    def _maybe_add_web_results(self, state: AgentState, query: str) -> AgentState:
+        """Use Tavily to fetch web results when allowed and available."""
+        if not state.context.get("allow_web_search"):
+            return state
+        if not self.tavily_tool:
+            state.context["web_search_results"] = "Web search unavailable (missing Tavily key)."
+            return state
+
+        # Avoid duplicate searches if already set for this query
+        cached_query = state.context.get("web_search_query")
+        if cached_query and cached_query == query:
+            return state
+
+        try:
+            results = self.tavily_tool.invoke(query)
+            formatted = []
+            for idx, item in enumerate(results[:5]):
+                title = item.get("title") or item.get("url") or f"Result {idx+1}"
+                snippet = item.get("content") or item.get("snippet") or ""
+                url = item.get("url") or ""
+                formatted.append(f"{idx+1}. {title}\n{snippet}\n{url}")
+
+            if formatted:
+                state.context["web_search_results"] = "\n\n".join(formatted)
+                state.context["web_search_query"] = query
+            else:
+                state.context["web_search_results"] = "No web results found."
+        except Exception as e:
+            state.context["web_search_results"] = f"Web search error: {str(e)}"
 
         return state
 
@@ -619,6 +664,9 @@ Your response must be exactly one of the three formats above.
 
         last_message = state.messages[-1]
 
+        # Optionally enrich context with web search when permitted
+        state = self._maybe_add_web_results(state, last_message)
+
         # Handle command responses without calling the LLM
         if state.context.get("skip_llm_response"):
             response = state.context.get(
@@ -644,6 +692,16 @@ Your response must be exactly one of the three formats above.
                 memory_summary = f"User's long-term memories: {memory_keys}"
                 conversation_context.append(
                     {"role": "system", "content": memory_summary}
+                )
+
+            # Add web search context if available
+            web_results = state.context.get("web_search_results")
+            if web_results:
+                conversation_context.append(
+                    {
+                        "role": "system",
+                        "content": f"Recent web search results (Tavily):\n{web_results}",
+                    }
                 )
 
             # Add recent conversation
@@ -777,6 +835,9 @@ Your response must be exactly one of the three formats above.
             session_id=request.session_id, messages=[request.message]
         )
 
+        if request.allow_web_search:
+            initial_state.context["allow_web_search"] = True
+
         # Process through simple, reliable workflow
         state = self._authenticate(initial_state)
         state = self._load_memory(state)
@@ -799,6 +860,10 @@ Your response must be exactly one of the three formats above.
             state.messages.append(response)
             state = self._save_memory(state)
             return
+
+        # Optionally enrich context with web search when permitted
+        if request.message:
+            state = self._maybe_add_web_results(state, request.message)
 
         # Now stream the response
         try:
@@ -861,6 +926,15 @@ Your response must be exactly one of the three formats above.
             if request.message:
                 conversation_context.append(
                     {"role": "user", "content": request.message}
+                )
+
+            web_results = state.context.get("web_search_results")
+            if web_results:
+                conversation_context.append(
+                    {
+                        "role": "system",
+                        "content": f"Recent web search results (Tavily):\n{web_results}",
+                    }
                 )
 
             # Stream from Groq

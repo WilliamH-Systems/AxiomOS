@@ -4,7 +4,7 @@ This file contains guidelines and commands for agentic coding agents working in 
 
 ## Project Overview
 
-AxiomOS is a Python project using modern Python 3.13+ with pyproject.toml for configuration. The project follows standard Python conventions and uses a virtual environment for dependency management. When installing packages, use "uv add", not "pip install" or "uv pip".
+AxiomOS is a Python project using modern Python 3.13+ with pyproject.toml for configuration. The project follows standard Python conventions and uses a virtual environment for dependency management. MAKE SURE TO ACTIVATE THE VIRTUAL ENVIRONMENT BEFORE INSTALLING PACKAGES. When installing packages, use "uv add", not "pip install" or "uv pip".
 
 ## Build/Lint/Test Commands
 
