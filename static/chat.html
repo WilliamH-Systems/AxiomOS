@@ -44,32 +44,42 @@
         <!-- Sidebar -->
         <div class="sidebar">
             <div class="glass-card">
-                <h3 style="margin-bottom: 1rem; color: var(--text-primary);">💬 Chat Sessions</h3>
-                <div id="sessionList" style="margin-bottom: 1rem;">
+                <h3 style="margin-bottom: 1rem; color: var(--text-primary); font-size: 1.2rem;">💬 Chat Sessions</h3>
+                <div id="sessionList" style="margin-bottom: 1rem; max-height: 300px; overflow-y: auto;">
                     <!-- Sessions will be populated here -->
                 </div>
-                <button onclick="startNewSession()" class="send-button" style="width: 100%; text-align: center;">
+                <button onclick="startNewSession()" class="send-button" style="width: 100%; text-align: center; padding: 0.75rem 1rem;">
                     + New Session
                 </button>
             </div>
             
             <div class="glass-card" style="margin-top: 1.5rem;">
-                <h4 style="margin-bottom: 0.75rem; color: var(--text-primary);">🤖 AI Status</h4>
-                <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
-                    <div id="statusIndicator" class="loading" style="width: 8px; height: 8px; background: #4ade80; border-radius: 50%;"></div>
-                    <span id="statusText" style="color: var(--text-secondary); font-size: 0.9rem;">Connecting...</span>
+                <h4 style="margin-bottom: 1rem; color: var(--text-primary); font-size: 1.1rem;">🤖 AI Status</h4>
+                <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem;">
+                    <div id="statusIndicator" class="loading" style="width: 10px; height: 10px; background: var(--success-color); border-radius: 50%; box-shadow: 0 0 10px var(--success-color);"></div>
+                    <span id="statusText" style="color: var(--text-secondary); font-size: 0.95rem;">Connecting...</span>
                 </div>
-                <div style="color: var(--text-muted); font-size: 0.8rem; margin-top: 0.5rem;">
-                    Model: Groq LLaMA 3.3
+                <div style="color: var(--text-muted); font-size: 0.85rem; margin-top: 0.75rem; line-height: 1.5;">
+                    Model: Advanced LLM<br>
+                    Response: Fast Streaming
                 </div>
             </div>
 
             <div class="glass-card" style="margin-top: 1.5rem;">
-                <h4 style="margin-bottom: 0.75rem; color: var(--text-primary);">📊 Quick Stats</h4>
-                <div style="color: var(--text-secondary); font-size: 0.9rem; line-height: 1.6;">
-                    <div style="margin-bottom: 0.5rem;">Messages: <span id="messageCount">0</span></div>
-                    <div style="margin-bottom: 0.5rem;">Session Time: <span id="sessionTime">0:00</span></div>
-                    <div>Tokens Used: <span id="tokenCount">0</span></div>
+                <h4 style="margin-bottom: 1rem; color: var(--text-primary); font-size: 1.1rem;">📊 Quick Stats</h4>
+                <div style="color: var(--text-secondary); font-size: 0.95rem; line-height: 1.8;">
+                    <div style="margin-bottom: 0.5rem; display: flex; justify-content: space-between;">
+                        <span>Messages:</span>
+                        <span id="messageCount" style="color: var(--primary-color); font-weight: 600;">0</span>
+                    </div>
+                    <div style="margin-bottom: 0.5rem; display: flex; justify-content: space-between;">
+                        <span>Session Time:</span>
+                        <span id="sessionTime" style="color: var(--secondary-color); font-weight: 600;">0:00</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between;">
+                        <span>Tokens Used:</span>
+                        <span id="tokenCount" style="color: var(--success-color); font-weight: 600;">0</span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -88,15 +98,15 @@
                 </div>
 
                 <!-- Input Area -->
-                <div class="chat-input-container">
+                <div class="chat-input-container" style="background: var(--glass-bg-hover); backdrop-filter: var(--backdrop-blur); -webkit-backdrop-filter: var(--backdrop-blur); border: 1px solid var(--glass-border); border-radius: var(--radius-lg); padding: 1rem; display: flex; gap: 0.75rem; align-items: flex-end; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);">
                     <textarea 
                         id="messageInput" 
                         class="chat-input" 
                         placeholder="Type your message here... (Press Enter to send, Shift+Enter for new line)"
                         rows="1"
-                        style="resize: none; overflow: hidden;"
+                        style="resize: none; overflow: hidden; background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.15); border-radius: var(--radius-md); padding: 0.75rem 1rem; color: var(--text-primary); font-size: 1rem; line-height: 1.5;"
                     ></textarea>
-                    <button id="sendBtn" class="send-button" onclick="sendMessage()">
+                    <button id="sendBtn" class="send-button" onclick="sendMessage()" style="padding: 0.75rem 1.5rem; white-space: nowrap;">
                         <span id="sendBtnText">Send</span>
                         <span id="sendBtnLoader" class="loading" style="display: none; margin-left: 0.5rem;"></span>
                     </button>
@@ -316,6 +326,7 @@
             
             statusText.textContent = text;
             statusIndicator.style.background = color;
+            statusIndicator.style.boxShadow = `0 0 10px ${color}`;
             statusIndicator.classList.remove('loading');
         }
 

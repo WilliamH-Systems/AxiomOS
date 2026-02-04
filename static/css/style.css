@@ -21,18 +21,24 @@
     --backdrop-blur: blur(20px);
     --backdrop-blur-light: blur(10px);
     
-    /* Colors */
-    --primary-color: #45e2f2;
-    --secondary-color: #d1daff;
-    --accent-color: #ff6b6b;
+    /* Colors - Psychology-based palette without pink/purple */
+    /* Cyan/Teal: Calming, trustworthy, modern */
+    --primary-color: #00d4aa;
+    /* Blue: Professional, reliable, clear */
+    --secondary-color: #0077b6;
+    /* Green: Growth, stability, positive */
+    --success-color: #2a9d8f;
+    /* Orange: Energy, creativity (accent) */
+    --accent-color: #e76f51;
+    /* Text colors */
     --text-primary: #ffffff;
-    --text-secondary: rgba(255, 255, 255, 0.8);
-    --text-muted: rgba(255, 255, 255, 0.6);
+    --text-secondary: rgba(255, 255, 255, 0.85);
+    --text-muted: rgba(255, 255, 255, 0.65);
     
-    /* Gradients */
-    --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    --gradient-secondary: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-    --gradient-bg: linear-gradient(135deg, #1e3c72 0%, #2a5298 50%, #7e22ce 100%);
+    /* Gradients - Professional and calm */
+    --gradient-primary: linear-gradient(135deg, #00d4aa 0%, #0077b6 100%);
+    --gradient-secondary: linear-gradient(135deg, #2a9d8f 0%, #264653 100%);
+    --gradient-bg: linear-gradient(135deg, #0a192f 0%, #112240 50%, #1a365d 100%);
     
     /* Spacing */
     --spacing-xs: 0.5rem;
@@ -145,9 +151,10 @@ body {
 }
 
 .nav-item.active {
-    color: var(--primary-color);
-    background: rgba(69, 226, 242, 0.1);
-    border: 1px solid rgba(69, 226, 242, 0.3);
+    color: var(--text-primary);
+    background: linear-gradient(135deg, rgba(0, 212, 170, 0.2), rgba(0, 119, 182, 0.2));
+    border: 1px solid rgba(0, 212, 170, 0.4);
+    box-shadow: 0 0 20px rgba(0, 212, 170, 0.2);
 }
 
 /* Main Container */
@@ -220,12 +227,13 @@ body {
     font-size: 3rem;
     font-weight: 700;
     margin-bottom: var(--spacing-md);
-    background: linear-gradient(135deg, var(--text-primary) 0%, var(--primary-color) 100%);
+    background: linear-gradient(135deg, var(--text-primary) 0%, var(--primary-color) 50%, var(--secondary-color) 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
     text-align: center;
     animation: fadeIn 1s ease-out;
+    text-shadow: 0 0 40px rgba(0, 212, 170, 0.3);
 }
 
 .page-description {
@@ -373,6 +381,7 @@ body {
     transition: all var(--transition-fast);
     position: relative;
     overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0, 212, 170, 0.3);
 }
 
 .send-button::before {
@@ -395,7 +404,7 @@ body {
 
 .send-button:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(69, 226, 242, 0.3);
+    box-shadow: 0 8px 25px rgba(0, 212, 170, 0.5);
 }
 
 /* Message Styles */
@@ -411,10 +420,11 @@ body {
 }
 
 .message.user {
-    background: linear-gradient(135deg, rgba(69, 226, 242, 0.2), rgba(209, 218, 255, 0.2));
+    background: linear-gradient(135deg, rgba(0, 212, 170, 0.25), rgba(0, 119, 182, 0.25));
     border-color: var(--primary-color);
     align-self: flex-end;
     margin-left: auto;
+    box-shadow: 0 4px 15px rgba(0, 212, 170, 0.2);
 }
 
 .message.assistant {
@@ -542,7 +552,8 @@ body {
 }
 
 .toggle-switch.active {
-    background: var(--primary-color);
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    box-shadow: 0 0 15px rgba(0, 212, 170, 0.4);
 }
 
 .toggle-switch::after {
@@ -651,13 +662,13 @@ body {
 
 @keyframes pulse {
     0% {
-        box-shadow: 0 0 0 0 rgba(69, 226, 242, 0.7);
+        box-shadow: 0 0 0 0 rgba(0, 212, 170, 0.7);
     }
     70% {
-        box-shadow: 0 0 0 10px rgba(69, 226, 242, 0);
+        box-shadow: 0 0 0 10px rgba(0, 212, 170, 0);
     }
     100% {
-        box-shadow: 0 0 0 0 rgba(69, 226, 242, 0);
+        box-shadow: 0 0 0 0 rgba(0, 212, 170, 0);
     }
 }
 

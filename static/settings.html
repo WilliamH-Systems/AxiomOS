@@ -42,36 +42,57 @@
         <!-- Sidebar -->
         <div class="sidebar">
             <div class="glass-card">
-                <h3 style="margin-bottom: 1rem; color: var(--text-primary);">⚙️ Quick Settings</h3>
+                <h3 style="margin-bottom: 1rem; color: var(--text-primary); font-size: 1.2rem;">⚙️ Quick Settings</h3>
                 <div style="display: flex; flex-direction: column; gap: 0.75rem;">
-                    <button onclick="resetToDefaults()" class="nav-item" style="text-align: left; justify-content: flex-start; padding: 0.75rem;">
+                    <button onclick="resetToDefaults()" class="nav-item" style="text-align: left; justify-content: flex-start; padding: 0.75rem 1rem;">
                         🔄 Reset to Defaults
                     </button>
-                    <button onclick="exportSettings()" class="nav-item" style="text-align: left; justify-content: flex-start; padding: 0.75rem;">
+                    <button onclick="exportSettings()" class="nav-item" style="text-align: left; justify-content: flex-start; padding: 0.75rem 1rem;">
                         📤 Export Settings
                     </button>
-                    <button onclick="importSettings()" class="nav-item" style="text-align: left; justify-content: flex-start; padding: 0.75rem;">
+                    <button onclick="importSettings()" class="nav-item" style="text-align: left; justify-content: flex-start; padding: 0.75rem 1rem;">
                         📥 Import Settings
                     </button>
                 </div>
             </div>
             
             <div class="glass-card" style="margin-top: 1.5rem;">
-                <h4 style="margin-bottom: 0.75rem; color: var(--text-primary);">📊 System Info</h4>
-                <div style="color: var(--text-secondary); font-size: 0.9rem; line-height: 1.6;">
-                    <div style="margin-bottom: 0.5rem;">Version: <span style="color: var(--primary-color);">0.1.0</span></div>
-                    <div style="margin-bottom: 0.5rem;">Model: <span style="color: var(--primary-color);">Groq LLaMA 3.1</span></div>
-                    <div style="margin-bottom: 0.5rem;">Status: <span style="color: #4ade80;">Online</span></div>
-                    <div>Uptime: <span id="uptime" style="color: var(--text-muted);">0:00:00</span></div>
+                <h4 style="margin-bottom: 1rem; color: var(--text-primary); font-size: 1.1rem;">📊 System Info</h4>
+                <div style="color: var(--text-secondary); font-size: 0.95rem; line-height: 1.8;">
+                    <div style="margin-bottom: 0.5rem; display: flex; justify-content: space-between;">
+                        <span>Version:</span>
+                        <span style="color: var(--primary-color); font-weight: 600;">0.1.0</span>
+                    </div>
+                    <div style="margin-bottom: 0.5rem; display: flex; justify-content: space-between;">
+                        <span>Model:</span>
+                        <span style="color: var(--secondary-color); font-weight: 600;">Advanced LLM</span>
+                    </div>
+                    <div style="margin-bottom: 0.5rem; display: flex; justify-content: space-between;">
+                        <span>Status:</span>
+                        <span style="color: var(--success-color); font-weight: 600;">Online</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between;">
+                        <span>Uptime:</span>
+                        <span id="uptime" style="color: var(--text-muted);">0:00:00</span>
+                    </div>
                 </div>
             </div>
 
             <div class="glass-card" style="margin-top: 1.5rem;">
-                <h4 style="margin-bottom: 0.75rem; color: var(--text-primary);">💾 Storage</h4>
-                <div style="color: var(--text-secondary); font-size: 0.9rem; line-height: 1.6;">
-                    <div style="margin-bottom: 0.5rem;">Memories: <span id="memoryStorage" style="color: var(--text-muted);">0 KB</span></div>
-                    <div style="margin-bottom: 0.5rem;">Sessions: <span id="sessionStorage" style="color: var(--text-muted);">0 KB</span></div>
-                    <div>Total: <span id="totalStorage" style="color: var(--primary-color); font-weight: 600;">0 KB</span></div>
+                <h4 style="margin-bottom: 1rem; color: var(--text-primary); font-size: 1.1rem;">💾 Storage</h4>
+                <div style="color: var(--text-secondary); font-size: 0.95rem; line-height: 1.8;">
+                    <div style="margin-bottom: 0.5rem; display: flex; justify-content: space-between;">
+                        <span>Memories:</span>
+                        <span id="memoryStorage" style="color: var(--text-muted);">0 KB</span>
+                    </div>
+                    <div style="margin-bottom: 0.5rem; display: flex; justify-content: space-between;">
+                        <span>Sessions:</span>
+                        <span id="sessionStorage" style="color: var(--text-muted);">0 KB</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between;">
+                        <span>Total:</span>
+                        <span id="totalStorage" style="color: var(--primary-color); font-weight: 600;">0 KB</span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -627,18 +648,20 @@
         function showNotification(message, type) {
             // Create notification element
             const notification = document.createElement('div');
+            const bgColor = type === 'success' ? 'rgba(42, 157, 143, 0.9)' : type === 'error' ? 'rgba(239, 68, 68, 0.9)' : 'rgba(0, 212, 170, 0.9)';
             notification.style.cssText = `
                 position: fixed;
                 top: 100px;
                 right: 20px;
-                background: ${type === 'success' ? 'rgba(74, 222, 128, 0.9)' : type === 'error' ? 'rgba(239, 68, 68, 0.9)' : 'rgba(69, 226, 242, 0.9)'};
+                background: ${bgColor};
                 color: white;
                 padding: 1rem 1.5rem;
                 border-radius: var(--radius-md);
-                box-shadow: var(--glass-shadow);
+                box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
                 z-index: 10000;
                 animation: slideInRight 0.3s ease-out;
                 max-width: 300px;
+                font-weight: 500;
             `;
             notification.textContent = message;
             

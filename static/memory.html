@@ -44,65 +44,66 @@
         <!-- Sidebar -->
         <div class="sidebar">
             <div class="glass-card">
-                <h3 style="margin-bottom: 1rem; color: var(--text-primary);">🧠 Memory Stats</h3>
-                <div style="color: var(--text-secondary); font-size: 0.9rem; line-height: 1.6;">
-                    <div style="margin-bottom: 0.75rem; display: flex; justify-content: space-between;">
+                <h3 style="margin-bottom: 1rem; color: var(--text-primary); font-size: 1.2rem;">🧠 Memory Stats</h3>
+                <div style="color: var(--text-secondary); font-size: 0.95rem; line-height: 1.8;">
+                    <div style="margin-bottom: 0.75rem; display: flex; justify-content: space-between; align-items: center;">
                         <span>Total Memories:</span>
-                        <span id="totalMemories" style="color: var(--primary-color); font-weight: 600;">0</span>
+                        <span id="totalMemories" style="color: var(--primary-color); font-weight: 600; font-size: 1.1rem;">0</span>
                     </div>
-                    <div style="margin-bottom: 0.75rem; display: flex; justify-content: space-between;">
+                    <div style="margin-bottom: 0.75rem; display: flex; justify-content: space-between; align-items: center;">
                         <span>Session Memory:</span>
-                        <span id="sessionMemories" style="color: var(--secondary-color); font-weight: 600;">0</span>
+                        <span id="sessionMemories" style="color: var(--secondary-color); font-weight: 600; font-size: 1.1rem;">0</span>
                     </div>
-                    <div style="margin-bottom: 0.75rem; display: flex; justify-content: space-between;">
+                    <div style="margin-bottom: 0.75rem; display: flex; justify-content: space-between; align-items: center;">
                         <span>Long-term:</span>
-                        <span id="longTermMemories" style="color: var(--accent-color); font-weight: 600;">0</span>
+                        <span id="longTermMemories" style="color: var(--success-color); font-weight: 600; font-size: 1.1rem;">0</span>
                     </div>
-                    <div style="display: flex; justify-content: space-between;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
                         <span>Storage Used:</span>
-                        <span id="storageUsed" style="color: var(--text-muted);">0 KB</span>
+                        <span id="storageUsed" style="color: var(--text-muted); font-size: 0.9rem;">0 KB</span>
                     </div>
                 </div>
             </div>
             
             <div class="glass-card" style="margin-top: 1.5rem;">
-                <h4 style="margin-bottom: 0.75rem; color: var(--text-primary);">🔍 Search Memory</h4>
+                <h4 style="margin-bottom: 1rem; color: var(--text-primary); font-size: 1.1rem;">🔍 Search Memory</h4>
                 <input 
                     type="text" 
                     id="searchInput" 
                     placeholder="Search memories..."
                     style="
                         width: 100%;
-                        background: rgba(255, 255, 255, 0.05);
-                        border: 1px solid rgba(255, 255, 255, 0.1);
+                        background: rgba(255, 255, 255, 0.08);
+                        border: 1px solid rgba(255, 255, 255, 0.15);
                         border-radius: var(--radius-md);
-                        padding: 0.75rem;
+                        padding: 0.75rem 1rem;
                         color: var(--text-primary);
                         outline: none;
                         transition: all var(--transition-fast);
+                        font-size: 0.95rem;
                     "
                     onkeyup="searchMemories(this.value)"
                 >
-                <div id="searchResults" style="margin-top: 1rem; max-height: 200px; overflow-y: auto;"></div>
+                <div id="searchResults" style="margin-top: 1rem; max-height: 250px; overflow-y: auto;"></div>
             </div>
 
             <div class="glass-card" style="margin-top: 1.5rem;">
-                <h4 style="margin-bottom: 0.75rem; color: var(--text-primary);">🏷️ Categories</h4>
-                <div id="categoryList" style="display: flex; flex-direction: column; gap: 0.5rem;">
+                <h4 style="margin-bottom: 1rem; color: var(--text-primary); font-size: 1.1rem;">🏷️ Categories</h4>
+                <div id="categoryList" style="display: flex; flex-direction: column; gap: 0.5rem; max-height: 200px; overflow-y: auto;">
                     <!-- Categories will be populated here -->
                 </div>
             </div>
 
             <div class="glass-card" style="margin-top: 1.5rem;">
-                <h4 style="margin-bottom: 0.75rem; color: var(--text-primary);">⚡ Quick Actions</h4>
+                <h4 style="margin-bottom: 1rem; color: var(--text-primary); font-size: 1.1rem;">⚡ Quick Actions</h4>
                 <div style="display: flex; flex-direction: column; gap: 0.5rem;">
-                    <button onclick="exportMemories()" class="nav-item" style="text-align: left; justify-content: flex-start; padding: 0.75rem;">
+                    <button onclick="exportMemories()" class="nav-item" style="text-align: left; justify-content: flex-start; padding: 0.75rem 1rem;">
                         📤 Export All
                     </button>
-                    <button onclick="clearSessionMemory()" class="nav-item" style="text-align: left; justify-content: flex-start; padding: 0.75rem;">
+                    <button onclick="clearSessionMemory()" class="nav-item" style="text-align: left; justify-content: flex-start; padding: 0.75rem 1rem;">
                         🗑️ Clear Session
                     </button>
-                    <button onclick="showMemoryStats()" class="nav-item" style="text-align: left; justify-content: flex-start; padding: 0.75rem;">
+                    <button onclick="showMemoryStats()" class="nav-item" style="text-align: left; justify-content: flex-start; padding: 0.75rem 1rem;">
                         📊 View Stats
                     </button>
                 </div>
@@ -380,36 +381,50 @@
             hideEmptyState();
             
             memoryGrid.innerHTML = memoriesToShow.map(memory => `
-                <div class="memory-card" onclick="viewMemoryDetails('${memory.id}')">
-                    <div class="memory-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+                <div class="memory-card" onclick="viewMemoryDetails('${memory.id}')" style="
+                    background: var(--glass-bg);
+                    backdrop-filter: var(--backdrop-blur);
+                    -webkit-backdrop-filter: var(--backdrop-blur);
+                    border: 1px solid var(--glass-border);
+                    border-radius: var(--radius-lg);
+                    padding: 1.5rem;
+                    transition: all var(--transition-normal);
+                    cursor: pointer;
+                    position: relative;
+                    overflow: hidden;
+                " onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 12px 48px rgba(0, 0, 0, 0.2)';" 
+                   onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='var(--glass-shadow)';">
+                    <div class="memory-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
                         <span class="memory-type" style="
                             padding: 0.25rem 0.75rem;
-                            background: ${memory.type === 'session' ? 'rgba(69, 226, 242, 0.2)' : 'rgba(209, 218, 255, 0.2)'};
+                            background: ${memory.type === 'session' ? 'rgba(0, 212, 170, 0.2)' : 'rgba(0, 119, 182, 0.2)'};
+                            border: 1px solid ${memory.type === 'session' ? 'rgba(0, 212, 170, 0.4)' : 'rgba(0, 119, 182, 0.4)'};
                             border-radius: var(--radius-full);
-                            font-size: 0.8rem;
+                            font-size: 0.85rem;
                             color: ${memory.type === 'session' ? 'var(--primary-color)' : 'var(--secondary-color)'};
-                            font-weight: 500;
+                            font-weight: 600;
                         ">
                             ${memory.type === 'session' ? 'Session' : 'Long-term'}
                         </span>
                         <button onclick="event.stopPropagation(); deleteMemory('${memory.id}')" style="
-                            background: none;
-                            border: none;
-                            color: var(--text-muted);
+                            background: rgba(239, 68, 68, 0.1);
+                            border: 1px solid rgba(239, 68, 68, 0.3);
+                            color: #ef4444;
                             cursor: pointer;
                             font-size: 1.2rem;
-                            padding: 0.25rem;
-                            transition: color var(--transition-fast);
-                        " onmouseover="this.style.color='var(--accent-color)'" 
-                           onmouseout="this.style.color='var(--text-muted)'">
+                            padding: 0.25rem 0.5rem;
+                            border-radius: var(--radius-sm);
+                            transition: all var(--transition-fast);
+                        " onmouseover="this.style.background='rgba(239, 68, 68, 0.2)'; this.style.borderColor='rgba(239, 68, 68, 0.5)';" 
+                           onmouseout="this.style.background='rgba(239, 68, 68, 0.1)'; this.style.borderColor='rgba(239, 68, 68, 0.3)';">
                             ×
                         </button>
                     </div>
                     
                     <h3 class="memory-title" style="
-                        font-size: 1.1rem;
+                        font-size: 1.2rem;
                         font-weight: 600;
-                        margin-bottom: 0.5rem;
+                        margin-bottom: 0.75rem;
                         color: var(--text-primary);
                         overflow: hidden;
                         text-overflow: ellipsis;
@@ -420,21 +435,28 @@
                     
                     <div class="memory-content" style="
                         color: var(--text-secondary);
-                        line-height: 1.5;
+                        line-height: 1.6;
                         margin-bottom: 1rem;
                         overflow: hidden;
                         text-overflow: ellipsis;
                         display: -webkit-box;
                         -webkit-line-clamp: 3;
                         -webkit-box-orient: vertical;
+                        font-size: 0.95rem;
                     ">
                         ${memory.content}
                     </div>
                     
-                    <div class="memory-meta">
-                        <span style="color: var(--text-muted); font-size: 0.8rem;">
-                            ${new Date(memory.created_at).toLocaleDateString()}
-                        </span>
+                    <div class="memory-meta" style="
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+                        font-size: 0.85rem;
+                        color: var(--text-muted);
+                        padding-top: 0.75rem;
+                        border-top: 1px solid rgba(255, 255, 255, 0.1);
+                    ">
+                        <span>${new Date(memory.created_at).toLocaleDateString()}</span>
                         ${memory.category ? `
                             <span style="
                                 padding: 0.25rem 0.5rem;
@@ -535,8 +557,120 @@
         }
 
         function viewMemoryDetails(memoryId) {
-            // This would open a modal or navigate to a detail page
-            console.log('View memory details:', memoryId);
+            const memory = memories.find(m => m.id === memoryId);
+            if (!memory) return;
+            
+            // Create modal for viewing memory details
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0, 0, 0, 0.8);
+                backdrop-filter: blur(10px);
+                -webkit-backdrop-filter: blur(10px);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 10000;
+                animation: fadeIn 0.3s ease-out;
+            `;
+            
+            modal.innerHTML = `
+                <div class="glass-card" style="
+                    max-width: 600px;
+                    max-height: 80vh;
+                    overflow-y: auto;
+                    position: relative;
+                    animation: scaleIn 0.3s ease-out;
+                ">
+                    <button onclick="this.closest('div').parentElement.remove()" style="
+                        position: absolute;
+                        top: 1rem;
+                        right: 1rem;
+                        background: rgba(239, 68, 68, 0.2);
+                        border: 1px solid rgba(239, 68, 68, 0.4);
+                        color: #ef4444;
+                        cursor: pointer;
+                    font-size: 1.5rem;
+                    padding: 0.5rem 0.75rem;
+                    border-radius: var(--radius-sm);
+                    transition: all var(--transition-fast);
+                " onmouseover="this.style.background='rgba(239, 68, 68, 0.3)';" 
+                   onmouseout="this.style.background='rgba(239, 68, 68, 0.2)';">
+                        ×
+                    </button>
+                    
+                    <div style="padding: 2rem;">
+                        <span style="
+                            padding: 0.25rem 0.75rem;
+                            background: ${memory.type === 'session' ? 'rgba(0, 212, 170, 0.2)' : 'rgba(0, 119, 182, 0.2)'};
+                            border: 1px solid ${memory.type === 'session' ? 'rgba(0, 212, 170, 0.4)' : 'rgba(0, 119, 182, 0.4)'};
+                            border-radius: var(--radius-full);
+                            font-size: 0.85rem;
+                            color: ${memory.type === 'session' ? 'var(--primary-color)' : 'var(--secondary-color)'};
+                            font-weight: 600;
+                            display: inline-block;
+                            margin-bottom: 1rem;
+                        ">
+                            ${memory.type === 'session' ? 'Session Memory' : 'Long-term Memory'}
+                        </span>
+                        
+                        <h2 style="color: var(--text-primary); margin-bottom: 1rem; font-size: 1.5rem;">
+                            ${memory.title || 'Untitled Memory'}
+                        </h2>
+                        
+                        <div style="color: var(--text-secondary); line-height: 1.8; margin-bottom: 1.5rem; font-size: 1rem;">
+                            ${memory.content}
+                        </div>
+                        
+                        <div style="
+                            padding-top: 1rem;
+                            border-top: 1px solid rgba(255, 255, 255, 0.1);
+                            display: flex;
+                            justify-content: space-between;
+                            align-items: center;
+                            color: var(--text-muted);
+                            font-size: 0.9rem;
+                        ">
+                            <span>Created: ${new Date(memory.created_at).toLocaleString()}</span>
+                            ${memory.category ? `<span>Category: ${memory.category}</span>` : ''}
+                        </div>
+                        
+                        <div style="margin-top: 1.5rem; display: flex; gap: 0.75rem;">
+                            <button onclick="editMemory('${memory.id}')" class="nav-item" style="
+                                flex: 1;
+                                padding: 0.75rem;
+                                text-align: center;
+                                background: rgba(0, 212, 170, 0.2);
+                                border: 1px solid rgba(0, 212, 170, 0.4);
+                            ">
+                                ✏️ Edit
+                            </button>
+                            <button onclick="deleteMemory('${memory.id}'); this.closest('div').parentElement.parentElement.remove();" class="nav-item" style="
+                                flex: 1;
+                                padding: 0.75rem;
+                                text-align: center;
+                                background: rgba(239, 68, 68, 0.2);
+                                border: 1px solid rgba(239, 68, 68, 0.4);
+                            ">
+                                🗑️ Delete
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            
+            // Close on backdrop click
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.remove();
+                }
+            });
         }
 
         async function deleteMemory(memoryId) {
