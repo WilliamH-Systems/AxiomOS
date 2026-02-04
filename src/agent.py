@@ -8,7 +8,7 @@ import asyncio
 import json
 
 from groq import Groq
-from langchain_tavily import TavilySearchResults
+from langchain_tavily import TavilySearch
 
 from .database import db_manager
 from .database import User as DBUser, Session as DBSession, LongTermMemory as DBMemory
@@ -33,11 +33,15 @@ class AxiomOSAgent:
         self.tavily_tool = None
         if config.tavily.api_key:
             try:
-                self.tavily_tool = TavilySearchResults(
-                    api_key=config.tavily.api_key, max_results=5
-                )
-            except Exception:
+                # TavilySearch will read TAVILY_API_KEY from the environment
+                # max_results controls how many results we consider
+                self.tavily_tool = TavilySearch(max_results=5)
+                print("[DEBUG] Tavily tool initialized")
+            except Exception as e:
+                print(f"[DEBUG] Failed to init Tavily: {e}")
                 self.tavily_tool = None
+        else:
+            print("[DEBUG] No TAVILY_API_KEY found")
 
     def run(self, request: AgentRequestModel) -> AgentResponseModel:
         """Simple, production-ready agent execution"""
@@ -48,6 +52,9 @@ class AxiomOSAgent:
         # Respect per-request web search permission
         if request.allow_web_search:
             initial_state.context["allow_web_search"] = True
+            print("[DEBUG] Web search ENABLED for this request")
+        else:
+            print("[DEBUG] Web search DISABLED for this request")
 
         # Process through simple, reliable workflow
         state = self._authenticate(initial_state)
@@ -101,32 +108,88 @@ class AxiomOSAgent:
     def _maybe_add_web_results(self, state: AgentState, query: str) -> AgentState:
         """Use Tavily to fetch web results when allowed and available."""
         if not state.context.get("allow_web_search"):
+            print("[DEBUG] Web search not allowed for this request")
             return state
         if not self.tavily_tool:
             state.context["web_search_results"] = "Web search unavailable (missing Tavily key)."
+            print("[DEBUG] Tavily tool not available")
             return state
 
         # Avoid duplicate searches if already set for this query
         cached_query = state.context.get("web_search_query")
         if cached_query and cached_query == query:
+            print("[DEBUG] Using cached web search results")
             return state
 
         try:
-            results = self.tavily_tool.invoke(query)
+            print(f"[DEBUG] Running Tavily search for query: {query}")
+            raw = self.tavily_tool.invoke(query)
+            print(f"[DEBUG] Raw Tavily result type: {type(raw)}")
+
+            # Normalise Tavily output into a list of result objects
+            items = []
+            if isinstance(raw, list):
+                items = raw
+            elif isinstance(raw, dict):
+                # Common patterns: {"results": [...]} or similar
+                for key in ("results", "data", "documents"):
+                    val = raw.get(key)
+                    if isinstance(val, list):
+                        items = val
+                        break
+                if not items:
+                    items = [raw]
+            elif raw is not None:
+                items = [raw]
+
             formatted = []
-            for idx, item in enumerate(results[:5]):
-                title = item.get("title") or item.get("url") or f"Result {idx+1}"
-                snippet = item.get("content") or item.get("snippet") or ""
-                url = item.get("url") or ""
+            for idx, doc in enumerate(items[:5]):
+                # Try attributes first (Document-like), then mapping-style, then fallback
+                title = None
+                content = None
+                url = None
+
+                # Attribute-style access (LangChain Document)
+                try:
+                    title = getattr(doc, "title", None)
+                    if title is None and hasattr(doc, "metadata"):
+                        meta = getattr(doc, "metadata", {}) or {}
+                        if isinstance(meta, dict):
+                            title = meta.get("title")
+                            url = meta.get("url")
+                    content = getattr(doc, "page_content", None) or getattr(doc, "content", None)
+                    url = url or getattr(doc, "url", None)
+                except Exception:
+                    pass
+
+                # Mapping-style access if still missing
+                if isinstance(doc, dict):
+                    title = title or doc.get("title") or doc.get("url")
+                    content = content or doc.get("content") or doc.get("snippet")
+                    url = url or doc.get("url")
+
+                # Fallbacks
+                if not title:
+                    title = f"Result {idx+1}"
+                if not content:
+                    content = str(doc)
+                if not url:
+                    url = ""
+
+                snippet = (content[:200] + "...") if len(content) > 200 else content
                 formatted.append(f"{idx+1}. {title}\n{snippet}\n{url}")
 
             if formatted:
                 state.context["web_search_results"] = "\n\n".join(formatted)
                 state.context["web_search_query"] = query
+                state.context["used_web_search"] = True
+                print(f"[DEBUG] Tavily returned {len(formatted)} results")
             else:
                 state.context["web_search_results"] = "No web results found."
+                print("[DEBUG] Tavily returned no results")
         except Exception as e:
             state.context["web_search_results"] = f"Web search error: {str(e)}"
+            print(f"[DEBUG] Tavily search error: {e}")
 
         return state
 
@@ -686,6 +749,16 @@ Your response must be exactly one of the three formats above.
             # Build conversation context
             conversation_context = []
 
+            # High-level instruction so the model understands web search behaviour
+            system_instruction = (
+                "You are AxiomOS, a personal assistant. "
+                "If system messages include 'Recent web search results (Tavily):', "
+                "you DO have access to those up-to-date web search results. "
+                "Use them as the primary source for current factual questions, and do NOT say that you lack web "
+                "access or browsing. Instead, base your answer on those results and your general knowledge."
+            )
+            conversation_context.append({"role": "system", "content": system_instruction})
+
             # Add long-term memories as context
             if state.long_term_memory:
                 memory_keys = list(state.long_term_memory.keys())[:5]
@@ -869,6 +942,15 @@ Your response must be exactly one of the three formats above.
         try:
             # Build conversation context for streaming
             conversation_context = []
+
+            system_instruction = (
+                "You are AxiomOS, a personal assistant. "
+                "If system messages include 'Recent web search results (Tavily):', "
+                "you DO have access to those up-to-date web search results. "
+                "Use them as the primary source for current factual questions, and do NOT say that you lack web "
+                "access or browsing. Instead, base your answer on those results and your general knowledge."
+            )
+            conversation_context.append({"role": "system", "content": system_instruction})
 
             if state.long_term_memory:
                 # Build better memory context for streaming

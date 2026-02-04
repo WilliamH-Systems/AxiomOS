@@ -141,7 +141,7 @@ class RedisConfig:
 @dataclass
 class GroqConfig:
     api_key: str = os.getenv("GROQ_API_KEY", "")
-    model: str = os.getenv("GROQ_MODEL", "llama-3.1-8b-instant")
+    model: str = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
     max_tokens: int = int(os.getenv("GROQ_MAX_TOKENS", "1000"))
     temperature: float = float(os.getenv("GROQ_TEMPERATURE", "0.7"))
 

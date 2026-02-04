@@ -439,7 +439,6 @@ body::before {
 
 .web-search-button.active {
     background: linear-gradient(120deg, rgba(0, 212, 170, 0.55), rgba(0, 119, 182, 0.55));
-    color: #0b1724;
     border-color: rgba(0, 212, 170, 0.8);
     box-shadow: 0 10px 30px rgba(0, 212, 170, 0.35);
 }
