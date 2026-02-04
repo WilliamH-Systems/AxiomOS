@@ -352,8 +352,23 @@ body::before {
 .chat-container {
     display: flex;
     flex-direction: column;
-    height: calc(100vh - 200px);
+    min-height: calc(100vh - 220px);
     gap: var(--spacing-md);
+}
+
+.chat-panel {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    background: var(--glass-bg);
+    backdrop-filter: var(--backdrop-blur);
+    -webkit-backdrop-filter: var(--backdrop-blur);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--glass-shadow);
+    padding: var(--spacing-lg);
+    gap: var(--spacing-md);
+    min-height: 70vh;
 }
 
 .chat-messages {
@@ -371,15 +386,18 @@ body::before {
 }
 
 .chat-input-container {
-    background: var(--glass-bg);
+    background: var(--glass-bg-hover);
     backdrop-filter: var(--backdrop-blur);
     -webkit-backdrop-filter: var(--backdrop-blur);
     border: 1px solid var(--glass-border);
     border-radius: var(--radius-lg);
-    padding: var(--spacing-lg);
+    padding: var(--spacing-md);
     display: flex;
     gap: var(--spacing-sm);
     align-items: flex-end;
+    position: sticky;
+    bottom: 0;
+    box-shadow: var(--glass-shadow);
 }
 
 .chat-input {
