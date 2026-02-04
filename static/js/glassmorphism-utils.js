@@ -46,7 +46,7 @@ class GlassmorphismUtils {
         ripple.style.cssText = `
             position: absolute;
             border-radius: 50%;
-            background: rgba(69, 226, 242, 0.3);
+            background: rgba(0, 212, 170, 0.25);
             transform: scale(0);
             animation: ripple 0.6s linear;
             width: ${size}px;
@@ -360,10 +360,10 @@ class GlassmorphismUtils {
     showNotification(message, type = 'info', duration = 3000) {
         const notification = document.createElement('div');
         const colors = {
-            success: 'rgba(74, 222, 128, 0.9)',
+            success: 'rgba(42, 157, 143, 0.92)',
             error: 'rgba(239, 68, 68, 0.9)',
             warning: 'rgba(245, 158, 11, 0.9)',
-            info: 'rgba(69, 226, 242, 0.9)'
+            info: 'rgba(0, 212, 170, 0.92)'
         };
 
         notification.style.cssText = `

@@ -10,6 +10,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <!-- Particles.js CDN -->
     <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+    <script src="/static/js/particles-utils.js"></script>
+    <script src="/static/js/glassmorphism-utils.js"></script>
     <!-- AxiomOS Configuration -->
     <script src="/static/js/config.js"></script>
 </head>
@@ -191,68 +193,6 @@
     <script>
         // Initialize Particles.js
         document.addEventListener('DOMContentLoaded', function() {
-            particlesJS('particles-js', {
-                "particles": {
-                    "number": {
-                        "value": 100,
-                        "density": {
-                            "enable": true,
-                            "value_area": 700
-                        }
-                    },
-                    "color": {
-                        "value": "#45e2f2"
-                    },
-                    "shape": {
-                        "type": "circle"
-                    },
-                    "opacity": {
-                        "value": 0.4,
-                        "random": false
-                    },
-                    "size": {
-                        "value": 2.5,
-                        "random": true
-                    },
-                    "line_linked": {
-                        "enable": true,
-                        "distance": 130,
-                        "color": "#d1daff",
-                        "opacity": 0.3,
-                        "width": 1
-                    },
-                    "move": {
-                        "enable": true,
-                        "speed": 2.2,
-                        "direction": "none",
-                        "random": false,
-                        "straight": false,
-                        "out_mode": "out",
-                        "bounce": false
-                    }
-                },
-                "interactivity": {
-                    "detect_on": "canvas",
-                    "events": {
-                        "onhover": {
-                            "enable": true,
-                            "mode": "repulse"
-                        },
-                        "onclick": {
-                            "enable": false
-                        },
-                        "resize": true
-                    },
-                    "modes": {
-                        "repulse": {
-                            "distance": 100,
-                            "duration": 0.4
-                        }
-                    }
-                },
-                "retina_detect": true
-            });
-
             // Initialize memory management
             initializeMemory();
         });
@@ -262,6 +202,33 @@
         let filteredMemories = [];
         let currentPage = 1;
         const memoriesPerPage = 12;
+
+        const LOCAL_OVERRIDES_KEY = 'axiomos_memory_overrides_v1';
+        const LOCAL_DELETIONS_KEY = 'axiomos_memory_deletions_v1';
+
+        function loadLocalOverrides() {
+            try {
+                return JSON.parse(localStorage.getItem(LOCAL_OVERRIDES_KEY) || '{}');
+            } catch {
+                return {};
+            }
+        }
+
+        function saveLocalOverrides(overrides) {
+            localStorage.setItem(LOCAL_OVERRIDES_KEY, JSON.stringify(overrides));
+        }
+
+        function loadLocalDeletions() {
+            try {
+                return JSON.parse(localStorage.getItem(LOCAL_DELETIONS_KEY) || '[]');
+            } catch {
+                return [];
+            }
+        }
+
+        function saveLocalDeletions(ids) {
+            localStorage.setItem(LOCAL_DELETIONS_KEY, JSON.stringify(ids));
+        }
 
         function initializeMemory() {
             loadMemories();
@@ -292,7 +259,13 @@
             try {
                 const response = await AxiomOSConfig.apiRequest('memories');
                 if (response.ok) {
-                    memories = await response.json();
+                    const serverMemories = await response.json();
+                    const overrides = loadLocalOverrides();
+                    const deletions = new Set(loadLocalDeletions());
+
+                    memories = (Array.isArray(serverMemories) ? serverMemories : [])
+                        .filter(m => m && !deletions.has(m.id))
+                        .map(m => ({ ...m, ...(overrides[m.id] || {}) }));
                     filterAndDisplayMemories();
                 } else {
                     console.error('Failed to load memories');
@@ -680,6 +653,9 @@
                         method: 'DELETE'
                     });
                     if (response.ok) {
+                        const deletions = new Set(loadLocalDeletions());
+                        deletions.add(memoryId);
+                        saveLocalDeletions(Array.from(deletions));
                         memories = memories.filter(m => m.id !== memoryId);
                         filterAndDisplayMemories();
                     }
@@ -687,6 +663,113 @@
                     console.error('Error deleting memory:', error);
                 }
             }
+        }
+
+        function editMemory(memoryId) {
+            const memory = memories.find(m => m.id === memoryId);
+            if (!memory) return;
+
+            const modalId = 'memory-edit-modal';
+            const existing = document.getElementById(modalId);
+            if (existing) existing.remove();
+
+            const modal = document.createElement('div');
+            modal.id = modalId;
+            modal.style.cssText = `
+                position: fixed;
+                inset: 0;
+                background: rgba(0, 0, 0, 0.8);
+                backdrop-filter: blur(10px);
+                -webkit-backdrop-filter: blur(10px);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 10001;
+                animation: fadeIn 0.2s ease-out;
+            `;
+
+            modal.innerHTML = `
+                <div class="glass-card" style="max-width: 700px; width: 92%; position: relative; animation: scaleIn 0.25s ease-out;">
+                    <button id="memoryEditClose" style="
+                        position: absolute;
+                        top: 1rem;
+                        right: 1rem;
+                        background: rgba(239, 68, 68, 0.2);
+                        border: 1px solid rgba(239, 68, 68, 0.4);
+                        color: #ef4444;
+                        cursor: pointer;
+                        font-size: 1.2rem;
+                        padding: 0.5rem 0.75rem;
+                        border-radius: var(--radius-sm);
+                    ">×</button>
+
+                    <div style="padding: 2rem;">
+                        <h2 style="color: var(--text-primary); margin-bottom: 1rem; font-size: 1.4rem;">Edit Memory</h2>
+                        <div style="display: grid; gap: 0.75rem;">
+                            <label style="color: var(--text-muted); font-size: 0.9rem;">Title</label>
+                            <input id="memoryEditTitle" value="${escapeHtml(memory.title || '')}" style="
+                                width: 100%;
+                                background: rgba(255, 255, 255, 0.08);
+                                border: 1px solid rgba(255, 255, 255, 0.18);
+                                border-radius: var(--radius-md);
+                                padding: 0.75rem 1rem;
+                                color: var(--text-primary);
+                                outline: none;
+                                font-size: 1rem;
+                            "/>
+
+                            <label style="color: var(--text-muted); font-size: 0.9rem; margin-top: 0.25rem;">Content</label>
+                            <textarea id="memoryEditContent" rows="6" style="
+                                width: 100%;
+                                background: rgba(255, 255, 255, 0.08);
+                                border: 1px solid rgba(255, 255, 255, 0.18);
+                                border-radius: var(--radius-md);
+                                padding: 0.75rem 1rem;
+                                color: var(--text-primary);
+                                outline: none;
+                                font-size: 1rem;
+                                line-height: 1.6;
+                                resize: vertical;
+                            ">${escapeHtml(memory.content || '')}</textarea>
+
+                            <div style="display: flex; gap: 0.75rem; margin-top: 1rem;">
+                                <button id="memoryEditSave" class="send-button" style="flex: 1; padding: 0.9rem;">Save</button>
+                                <button id="memoryEditCancel" class="nav-item" style="flex: 1; justify-content: center; padding: 0.9rem;">Cancel</button>
+                            </div>
+
+                            <div style="color: var(--text-muted); font-size: 0.85rem; margin-top: 0.25rem; line-height: 1.5;">
+                                Changes are saved locally in your browser for this UI.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.body.appendChild(modal);
+
+            const close = () => modal.remove();
+            modal.addEventListener('click', (e) => { if (e.target === modal) close(); });
+
+            modal.querySelector('#memoryEditClose').addEventListener('click', close);
+            modal.querySelector('#memoryEditCancel').addEventListener('click', close);
+            modal.querySelector('#memoryEditSave').addEventListener('click', () => {
+                const title = document.getElementById('memoryEditTitle').value.trim();
+                const content = document.getElementById('memoryEditContent').value.trim();
+
+                const overrides = loadLocalOverrides();
+                overrides[memoryId] = { ...overrides[memoryId], title, content };
+                saveLocalOverrides(overrides);
+
+                memories = memories.map(m => m.id === memoryId ? { ...m, title, content } : m);
+                filterAndDisplayMemories();
+                close();
+            });
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
         }
 
         async function exportMemories() {

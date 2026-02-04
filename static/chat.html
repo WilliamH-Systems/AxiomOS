@@ -10,6 +10,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <!-- Particles.js CDN -->
     <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+    <script src="/static/js/particles-utils.js"></script>
+    <script src="/static/js/glassmorphism-utils.js"></script>
     <!-- AxiomOS Configuration -->
     <script src="/static/js/config.js"></script>
 </head>
@@ -118,68 +120,6 @@
     <script>
         // Initialize Particles.js
         document.addEventListener('DOMContentLoaded', function() {
-            particlesJS('particles-js', {
-                "particles": {
-                    "number": {
-                        "value": 80,
-                        "density": {
-                            "enable": true,
-                            "value_area": 800
-                        }
-                    },
-                    "color": {
-                        "value": "#45e2f2"
-                    },
-                    "shape": {
-                        "type": "circle"
-                    },
-                    "opacity": {
-                        "value": 0.5,
-                        "random": false
-                    },
-                    "size": {
-                        "value": 2,
-                        "random": true
-                    },
-                    "line_linked": {
-                        "enable": true,
-                        "distance": 120,
-                        "color": "#d1daff",
-                        "opacity": 0.3,
-                        "width": 1
-                    },
-                    "move": {
-                        "enable": true,
-                        "speed": 2,
-                        "direction": "none",
-                        "random": false,
-                        "straight": false,
-                        "out_mode": "out",
-                        "bounce": false
-                    }
-                },
-                "interactivity": {
-                    "detect_on": "canvas",
-                    "events": {
-                        "onhover": {
-                            "enable": true,
-                            "mode": "repulse"
-                        },
-                        "onclick": {
-                            "enable": false
-                        },
-                        "resize": true
-                    },
-                    "modes": {
-                        "repulse": {
-                            "distance": 100,
-                            "duration": 0.4
-                        }
-                    }
-                },
-                "retina_detect": true
-            });
-
             // Initialize chat functionality
             initializeChat();
         });
@@ -377,7 +317,8 @@
             try {
                 const response = await AxiomOSConfig.apiRequest('sessions');
                 if (response.ok) {
-                    const sessions = await response.json();
+                    const payload = await response.json();
+                    const sessions = Array.isArray(payload) ? payload : (payload.sessions || []);
                     const sessionList = document.getElementById('sessionList');
                     
                     sessionList.innerHTML = sessions.map(session => `

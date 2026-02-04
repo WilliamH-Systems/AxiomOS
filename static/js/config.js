@@ -39,7 +39,32 @@ const AxiomOSConfig = {
 
     // Get full API URL
     getAPIUrl(endpoint) {
-        return this.api.baseURL + this.api.endpoints[endpoint] || endpoint;
+        if (!endpoint) return this.api.baseURL;
+
+        const endpointStr = String(endpoint);
+
+        // Support `key/suffix/...` by mapping the first segment.
+        let mapped = this.api.endpoints[endpointStr];
+        if (!mapped && endpointStr.includes('/')) {
+            const [first, ...rest] = endpointStr.split('/');
+            const firstMapped = this.api.endpoints[first];
+            if (firstMapped) {
+                const suffix = rest.join('/');
+                mapped = suffix ? `${firstMapped.replace(/\/$/, '')}/${suffix}` : firstMapped;
+            }
+        }
+
+        const path = mapped ? mapped : endpointStr;
+        if (!path) return this.api.baseURL;
+
+        // If caller passed an absolute URL, keep it.
+        if (typeof path === 'string' && (path.startsWith('http://') || path.startsWith('https://'))) {
+            return path;
+        }
+
+        // Ensure we end up with a leading slash for relative paths.
+        const normalizedPath = typeof path === 'string' && path.startsWith('/') ? path : `/${path}`;
+        return `${this.api.baseURL}${normalizedPath}`;
     },
 
     // Make API request with error handling
@@ -53,11 +78,6 @@ const AxiomOSConfig = {
 
         try {
             const response = await fetch(url, { ...defaultOptions, ...options });
-            
-            if (!response.ok) {
-                throw new Error(`API Error: ${response.status} ${response.statusText}`);
-            }
-            
             return response;
         } catch (error) {
             console.error(`API Request failed for ${endpoint}:`, error);
