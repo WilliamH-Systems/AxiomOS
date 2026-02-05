@@ -353,6 +353,16 @@ async def get_session_messages(session_id: str):
         raise HTTPException(status_code=500, detail=f"Failed to get messages: {str(e)}")
 
 
+@app.delete("/api/sessions/{session_id}")
+async def delete_session_api(session_id: str):
+    """Delete a session via API"""
+    try:
+        redis_manager.delete_session(session_id)
+        return {"message": "Session deleted successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to delete session: {str(e)}")
+
+
 @app.delete("/session/{session_id}")
 async def delete_session(session_id: str):
     """Delete a session"""
