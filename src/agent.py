@@ -9,6 +9,9 @@ import json
 
 from groq import Groq
 from langchain_tavily import TavilySearch
+from langsmith import Client as LangSmithClient
+from langsmith import traceable
+import os
 
 from .database import db_manager
 from .database import User as DBUser, Session as DBSession, LongTermMemory as DBMemory
@@ -31,6 +34,22 @@ class AxiomOSAgent:
         self.groq_client = Groq(api_key=config.groq.api_key)
         self.memory = MemorySaver()
         self.tavily_tool = None
+        
+        # Initialize LangSmith client if tracing is enabled
+        self.langsmith_client = None
+        if config.langsmith.tracing == "true" and config.langsmith.api_key:
+            try:
+                self.langsmith_client = LangSmithClient(
+                    api_key=config.langsmith.api_key,
+                    api_url=config.langsmith.endpoint
+                )
+                print(f"[DEBUG] LangSmith tracing enabled for project: {config.langsmith.project}")
+            except Exception as e:
+                print(f"[DEBUG] Failed to initialize LangSmith client: {e}")
+                self.langsmith_client = None
+        else:
+            print("[DEBUG] LangSmith tracing disabled")
+            
         if config.tavily.api_key:
             try:
                 # TavilySearch will read TAVILY_API_KEY from the environment
@@ -43,6 +62,7 @@ class AxiomOSAgent:
         else:
             print("[DEBUG] No TAVILY_API_KEY found")
 
+    @traceable(name="axiom_agent_run")
     def run(self, request: AgentRequestModel) -> AgentResponseModel:
         """Simple, production-ready agent execution"""
         initial_state = AgentState(
@@ -105,6 +125,7 @@ class AxiomOSAgent:
 
         return state
 
+    @traceable(name="axiom_agent_web_search")
     def _maybe_add_web_results(self, state: AgentState, query: str) -> AgentState:
         """Use Tavily to fetch web results when allowed and available."""
         if not state.context.get("allow_web_search"):
@@ -720,6 +741,7 @@ Your response must be exactly one of the three formats above.
             )
         return state
 
+    @traceable(name="axiom_agent_respond")
     def _respond(self, state: AgentState) -> AgentState:
         """Generate intelligent response using Groq"""
         if not state.messages:
@@ -902,6 +924,7 @@ Your response must be exactly one of the three formats above.
 
         return state
 
+    @traceable(name="axiom_agent_run_stream")
     async def run_stream(self, request: AgentRequestModel) -> TokenStream:
         """Run agent with streaming response"""
         initial_state = AgentState(

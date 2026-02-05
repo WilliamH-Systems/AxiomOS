@@ -152,11 +152,20 @@ class TavilyConfig:
 
 
 @dataclass
+class LangSmithConfig:
+    api_key: str = os.getenv("LANGSMITH_API_KEY", "")
+    project: str = os.getenv("LANGSMITH_PROJECT", "AxiomOS")
+    tracing: str = os.getenv("LANGCHAIN_TRACING_V2", "false").lower()
+    endpoint: Optional[str] = os.getenv("LANGSMITH_ENDPOINT", None)
+
+
+@dataclass
 class AxiomOSConfig:
     database: DatabaseConfig = field(default_factory=DatabaseConfig)
     redis: RedisConfig = field(default_factory=RedisConfig)
     groq: GroqConfig = field(default_factory=GroqConfig)
     tavily: TavilyConfig = field(default_factory=TavilyConfig)
+    langsmith: LangSmithConfig = field(default_factory=LangSmithConfig)
     log_level: str = os.getenv("LOG_LEVEL", "INFO")
     session_timeout: int = int(os.getenv("SESSION_TIMEOUT", "3600"))  # 1 hour
 
