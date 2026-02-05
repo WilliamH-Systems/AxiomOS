@@ -63,19 +63,15 @@
                 <div style="color: var(--text-secondary); font-size: 0.95rem; line-height: 1.8;">
                     <div style="margin-bottom: 0.5rem; display: flex; justify-content: space-between;">
                         <span>Version:</span>
-                        <span style="color: var(--primary-color); font-weight: 600;">0.1.0</span>
+                        <span style="color: var(--primary-color); font-weight: 600;">0.7.0</span>
                     </div>
                     <div style="margin-bottom: 0.5rem; display: flex; justify-content: space-between;">
                         <span>Model:</span>
-                        <span style="color: var(--secondary-color); font-weight: 600;">Advanced LLM</span>
+                        <span id="currentModel" style="color: var(--secondary-color); font-weight: 600;">Loading...</span>
                     </div>
                     <div style="margin-bottom: 0.5rem; display: flex; justify-content: space-between;">
                         <span>Status:</span>
                         <span style="color: var(--success-color); font-weight: 600;">Online</span>
-                    </div>
-                    <div style="display: flex; justify-content: space-between;">
-                        <span>Uptime:</span>
-                        <span id="uptime" style="color: var(--text-muted);">0:00:00</span>
                     </div>
                 </div>
             </div>
@@ -636,17 +632,30 @@
             input.click();
         }
 
-        function updateSystemInfo() {
-            // Update uptime
-            const uptime = document.getElementById('uptime');
-            if (uptime) {
-                const now = Date.now();
-                const start = localStorage.getItem('axiomos_start_time') || now;
-                const elapsed = Math.floor((now - parseInt(start)) / 1000);
-                const hours = Math.floor(elapsed / 3600);
-                const minutes = Math.floor((elapsed % 3600) / 60);
-                const seconds = elapsed % 60;
-                uptime.textContent = `${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        async function updateSystemInfo() {
+            // Update current model from API
+            try {
+                const response = await fetch('/api/settings');
+                if (response.ok) {
+                    const settings = await response.json();
+                    const modelDisplay = document.getElementById('currentModel');
+                    if (modelDisplay) {
+                        // Get friendly name for model
+                        const modelNames = {
+                            'llama-3.3-70b-versatile': 'LLaMA 3.3 70B',
+                            'llama-3.1-8b-instant': 'LLaMA 3.1 8B',
+                            'openai/gpt-oss-120b': 'GPT-OSS 120B',
+                            'qwen/qwen3-32b': 'Qwen3 32B'
+                        };
+                        modelDisplay.textContent = modelNames[settings.model] || settings.model;
+                    }
+                }
+            } catch (error) {
+                console.error('Failed to fetch current model:', error);
+                const modelDisplay = document.getElementById('currentModel');
+                if (modelDisplay) {
+                    modelDisplay.textContent = 'Unknown';
+                }
             }
             
             // Update storage info (mock data for now)
