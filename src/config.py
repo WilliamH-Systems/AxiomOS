@@ -144,6 +144,23 @@ class GroqConfig:
     model: str = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
     max_tokens: int = int(os.getenv("GROQ_MAX_TOKENS", "1000"))
     temperature: float = float(os.getenv("GROQ_TEMPERATURE", "0.7"))
+    
+    def update_settings(self, model: str = None, temperature: float = None, max_tokens: int = None):
+        """Update configuration at runtime"""
+        if model is not None:
+            self.model = model
+        if temperature is not None:
+            self.temperature = temperature
+        if max_tokens is not None:
+            self.max_tokens = max_tokens
+    
+    def get_settings_dict(self):
+        """Get current settings as dictionary"""
+        return {
+            "model": self.model,
+            "temperature": self.temperature,
+            "max_tokens": self.max_tokens
+        }
 
 
 @dataclass

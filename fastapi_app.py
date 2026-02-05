@@ -11,7 +11,7 @@ from datetime import datetime
 import os
 
 from src.agent import axiom_agent
-from src.models import AgentRequestModel, AgentResponseModel, StreamChunkModel
+from src.models import AgentRequestModel, AgentResponseModel, StreamChunkModel, SettingsModel, SettingsResponseModel
 from src.database import db_manager
 from src.redis_manager import redis_manager
 from src.config import config
@@ -426,6 +426,39 @@ async def delete_memory(user_id: int, key: Optional[str] = None):
         raise HTTPException(
             status_code=500, detail=f"Failed to delete memory: {str(e)}"
         )
+
+
+@app.get("/api/settings", response_model=SettingsModel)
+async def get_settings():
+    """Get current AI settings"""
+    try:
+        return SettingsModel(
+            model=config.groq.model,
+            temperature=config.groq.temperature,
+            max_tokens=config.groq.max_tokens
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get settings: {str(e)}")
+
+
+@app.post("/api/settings", response_model=SettingsResponseModel)
+async def update_settings(settings: SettingsModel):
+    """Update AI settings"""
+    try:
+        # Update the configuration
+        config.groq.update_settings(
+            model=settings.model,
+            temperature=settings.temperature,
+            max_tokens=settings.max_tokens
+        )
+        
+        return SettingsResponseModel(
+            success=True,
+            message="Settings updated successfully",
+            settings=settings
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to update settings: {str(e)}")
 
 
 @app.get("/config")

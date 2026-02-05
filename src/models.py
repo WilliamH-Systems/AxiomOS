@@ -169,5 +169,33 @@ class ConfigModel(BaseModel):
         return v
 
 
+class SettingsModel(BaseModel):
+    """Settings model for AI configuration"""
+    model: str = Field(default="llama-3.3-70b-versatile", description="Groq model name")
+    temperature: float = Field(default=0.7, ge=0.0, le=2.0, description="Temperature for creativity")
+    max_tokens: int = Field(default=1000, ge=1, le=8000, description="Maximum tokens in response")
+    
+    @field_validator("model")
+    @classmethod
+    def validate_model(cls, v):
+        allowed_models = [
+            "llama-3.3-70b-versatile",
+            "llama-3.1-70b-versatile", 
+            "llama-3.1-8b-instant",
+            "mixtral-8x7b-32768",
+            "gemma2-9b-it"
+        ]
+        if v not in allowed_models:
+            raise ValueError(f"Model must be one of: {', '.join(allowed_models)}")
+        return v
+
+
+class SettingsResponseModel(BaseModel):
+    """Settings response model"""
+    success: bool = True
+    message: str = "Settings updated successfully"
+    settings: Optional[SettingsModel] = None
+
+
 # Type alias for async generator
 TokenStream = AsyncGenerator[StreamChunkModel, None]
