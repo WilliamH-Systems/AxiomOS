@@ -146,8 +146,68 @@ async def chat(request: AgentRequestModel):
 
 @app.post("/api/chat", response_model=AgentResponseModel)
 async def api_chat(request: AgentRequestModel):
-    """API chat endpoint for frontend"""
-    return await chat(request)
+    """API chat endpoint for frontend with session persistence"""
+    try:
+        # Ensure session exists
+        session_id = request.session_id
+        if not session_id:
+            # Create new session if none provided
+            import uuid
+            session_id = str(uuid.uuid4())
+            request.session_id = session_id
+            
+            # Initialize session data
+            session_data = {
+                "session_id": session_id,
+                "created_at": datetime.utcnow().isoformat(),
+                "messages": [],
+                "status": "active",
+                "title": f"New Chat {session_id[:8]}",
+                "message_count": 0
+            }
+            redis_manager.set_session_data(session_id, session_data)
+        
+        # Store user message in session
+        session_data = redis_manager.get_session_data(session_id) or {}
+        messages = session_data.get("messages", [])
+        
+        user_message = {
+            "content": request.message,
+            "type": "user",
+            "timestamp": datetime.utcnow().isoformat()
+        }
+        messages.append(user_message)
+        
+        # Get AI response
+        response = axiom_agent.run(request)
+        
+        # Store AI response in session
+        assistant_message = {
+            "content": response.response,
+            "type": "assistant", 
+            "timestamp": datetime.utcnow().isoformat()
+        }
+        messages.append(assistant_message)
+        
+        # Update session data
+        session_data.update({
+            "messages": messages,
+            "message_count": len(messages),
+            "updated_at": datetime.utcnow().isoformat()
+        })
+        
+        # Update session title based on first user message if still default
+        if session_data.get("title", "").startswith("New Chat") and len(messages) == 2:
+            # Use first 50 chars of first user message as title
+            title = request.message[:50] + ("..." if len(request.message) > 50 else "")
+            session_data["title"] = title
+        
+        redis_manager.set_session_data(session_id, session_data)
+        
+        return response
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Chat processing failed: {str(e)}")
 
 
 @app.post("/chat/stream")
@@ -199,35 +259,83 @@ async def create_session():
     import uuid
     session_id = str(uuid.uuid4())
     
-    # Initialize session data
+    # Initialize session data with more comprehensive information
     session_data = {
         "session_id": session_id,
         "created_at": datetime.utcnow().isoformat(),
         "messages": [],
-        "status": "active"
+        "status": "active",
+        "title": f"New Chat {session_id[:8]}",  # Default title
+        "message_count": 0
     }
     
     # Store session
     redis_manager.set_session_data(session_id, session_data)
     
-    return {"session_id": session_id, "status": "created"}
+    return {"session_id": session_id, "status": "created", "title": session_data["title"]}
 
 
 @app.get("/api/sessions")
 async def list_sessions():
-    """List all sessions (mock implementation for now)"""
-    # This is a simplified implementation
-    # In production, you'd want to store session metadata separately
-    return {
-        "sessions": [
-            {
-                "session_id": "demo-session-1",
-                "title": "Demo Chat Session",
-                "created_at": datetime.utcnow().isoformat(),
-                "message_count": 5
-            }
-        ]
-    }
+    """List all active sessions from Redis or fallback storage"""
+    try:
+        sessions = []
+        
+        if redis_manager.fallback_mode:
+            # In fallback mode, get sessions from memory storage
+            session_keys = [key for key in redis_manager.memory_storage.keys() if key.startswith("session:")]
+            
+            for key in session_keys:
+                session_data = redis_manager.memory_storage[key]
+                if session_data:
+                    session_id = key.replace("session:", "")
+                    sessions.append({
+                        "session_id": session_id,
+                        "title": session_data.get("title", f"Session {session_id[:8]}"),
+                        "created_at": session_data.get("created_at", datetime.utcnow().isoformat()),
+                        "message_count": len(session_data.get("messages", [])),
+                        "status": session_data.get("status", "active")
+                    })
+        else:
+            # For Redis, scan for session keys
+            redis_manager._ensure_connected()
+            if redis_manager.client:
+                try:
+                    # Look for session keys with a pattern (Redis SCAN)
+                    for key in redis_manager.client.scan_iter(match="session:*", count=100):
+                        try:
+                            # Handle both string and bytes keys
+                            if isinstance(key, bytes):
+                                key_str = key.decode('utf-8')
+                            else:
+                                key_str = str(key)
+                            
+                            session_id = key_str.replace("session:", "")
+                            session_data = redis_manager.get_session_data(session_id)
+                            
+                            if session_data:
+                                sessions.append({
+                                    "session_id": session_id,
+                                    "title": session_data.get("title", f"Session {session_id[:8]}"),
+                                    "created_at": session_data.get("created_at", datetime.utcnow().isoformat()),
+                                    "message_count": len(session_data.get("messages", [])),
+                                    "status": session_data.get("status", "active")
+                                })
+                        except Exception as e:
+                            print(f"Error processing session key {key}: {e}")
+                            continue
+                except Exception as e:
+                    print(f"Error scanning Redis sessions: {e}")
+        
+        # Sort by creation time (newest first)
+        sessions.sort(key=lambda x: x.get("created_at", ""), reverse=True)
+        
+        return {"sessions": sessions}
+        
+    except Exception as e:
+        print(f"Error listing sessions: {e}")
+        # Return empty sessions list on error
+        return {"sessions": []}
 
 
 @app.get("/api/sessions/{session_id}/messages")
@@ -291,47 +399,90 @@ async def get_user_memory(user_id: int):
 
 
 @app.get("/api/memories")
-async def api_get_memories():
-    """Get memories for frontend (mock implementation)"""
-    # Mock memory data for now
-    return [
-        {
-            "id": "mem-1",
-            "title": "User Preferences",
-            "content": "User prefers concise responses and likes technical details",
-            "type": "long_term",
-            "category": "preferences",
-            "created_at": datetime.utcnow().isoformat()
-        },
-        {
-            "id": "mem-2", 
-            "title": "Project Context",
-            "content": "Working on AxiomOS AI assistant with glassmorphism design",
-            "type": "session",
-            "category": "work",
-            "created_at": datetime.utcnow().isoformat()
-        }
-    ]
+async def api_get_memories(user_id: Optional[int] = 1):
+    """Get memories for frontend from actual database"""
+    try:
+        from src.database import LongTermMemory
+
+        db_session = db_manager.get_session()
+        try:
+            memories = (
+                db_session.query(LongTermMemory)
+                .filter(LongTermMemory.user_id == user_id)
+                .order_by(LongTermMemory.created_at.desc())
+                .all()
+            )
+
+            # Transform database records to frontend format
+            memory_data = []
+            for memory in memories:
+                # Extract category from key or use default
+                category = "general"
+                if ":" in memory.key:
+                    category = memory.key.split(":")[0]
+                
+                memory_data.append({
+                    "id": f"mem-{memory.id}",
+                    "title": memory.key.replace("_", " ").title(),
+                    "content": str(memory.value),
+                    "type": "long_term",
+                    "category": category,
+                    "created_at": memory.created_at.isoformat(),
+                    "updated_at": memory.updated_at.isoformat()
+                })
+
+            return memory_data
+        finally:
+            db_session.close()
+    except Exception as e:
+        print(f"Error retrieving memories: {e}")
+        # Return empty list on error to avoid frontend breaking
+        return []
 
 
 @app.get("/api/memories/categories")
-async def api_get_memory_categories():
-    """Get memory categories for frontend"""
-    return [
-        {"name": "preferences", "count": 5},
-        {"name": "work", "count": 3},
-        {"name": "personal", "count": 2},
-        {"name": "technical", "count": 8}
-    ]
+async def api_get_memory_categories(user_id: Optional[int] = 1):
+    """Get memory categories for frontend from actual database"""
+    try:
+        from src.database import LongTermMemory
+        from collections import Counter
+
+        db_session = db_manager.get_session()
+        try:
+            memories = (
+                db_session.query(LongTermMemory)
+                .filter(LongTermMemory.user_id == user_id)
+                .all()
+            )
+
+            # Extract categories from memory keys
+            categories = Counter()
+            for memory in memories:
+                category = "general"
+                if ":" in memory.key:
+                    category = memory.key.split(":")[0]
+                categories[category] += 1
+
+            # Convert to frontend format
+            return [
+                {"name": category, "count": count}
+                for category, count in categories.most_common()
+            ]
+        finally:
+            db_session.close()
+    except Exception as e:
+        print(f"Error retrieving memory categories: {e}")
+        # Return empty list on error to avoid frontend breaking
+        return []
 
 
 @app.get("/api/memories/export")
-async def api_export_memories():
-    """Export memories (mock implementation)"""
+async def api_export_memories(user_id: Optional[int] = 1):
+    """Export memories from actual database"""
     import json
     from fastapi.responses import Response
     
-    memories = await api_get_memories()
+    memories = await api_get_memories(user_id)
     
     # Create JSON response for download
     json_data = json.dumps(memories, indent=2)
@@ -350,10 +501,43 @@ async def api_clear_session_memories():
 
 
 @app.delete("/api/memories/{memory_id}")
-async def api_delete_memory(memory_id: str):
-    """Delete a specific memory"""
-    # Mock implementation
-    return {"message": f"Memory {memory_id} deleted successfully"}
+async def api_delete_memory(memory_id: str, user_id: Optional[int] = 1):
+    """Delete a specific memory from database"""
+    try:
+        from src.database import LongTermMemory
+
+        # Extract numeric ID from memory_id (format: "mem-{id}")
+        if not memory_id.startswith("mem-"):
+            raise HTTPException(status_code=400, detail="Invalid memory ID format")
+        
+        try:
+            db_memory_id = int(memory_id.split("-")[1])
+        except (IndexError, ValueError):
+            raise HTTPException(status_code=400, detail="Invalid memory ID format")
+
+        db_session = db_manager.get_session()
+        try:
+            # Find and delete the memory
+            memory = (
+                db_session.query(LongTermMemory)
+                .filter(LongTermMemory.id == db_memory_id, LongTermMemory.user_id == user_id)
+                .first()
+            )
+            
+            if not memory:
+                raise HTTPException(status_code=404, detail="Memory not found")
+            
+            db_session.delete(memory)
+            db_session.commit()
+            
+            return {"message": f"Memory {memory_id} deleted successfully"}
+        finally:
+            db_session.close()
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error deleting memory: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to delete memory: {str(e)}")
 
 
 @app.post("/memory/{user_id}")
