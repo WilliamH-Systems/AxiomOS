@@ -180,10 +180,9 @@ class SettingsModel(BaseModel):
     def validate_model(cls, v):
         allowed_models = [
             "llama-3.3-70b-versatile",
-            "llama-3.1-70b-versatile", 
             "llama-3.1-8b-instant",
-            "mixtral-8x7b-32768",
-            "gemma2-9b-it"
+            "openai/gpt-oss-120b",
+            "qwen/qwen3-32b"
         ]
         if v not in allowed_models:
             raise ValueError(f"Model must be one of: {', '.join(allowed_models)}")
