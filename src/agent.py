@@ -91,6 +91,7 @@ class AxiomOSAgent:
             context=state.context,
         )
 
+    @traceable
     def _authenticate(self, state: AgentState) -> AgentState:
         """Authenticate or create session"""
         if not state.session_id:
@@ -214,6 +215,7 @@ class AxiomOSAgent:
 
         return state
 
+    @traceable
     def _execute_command(self, state: AgentState) -> AgentState:
         """Execute slash command operations before LLM response"""
         command = state.context.get("command")
@@ -407,6 +409,7 @@ class AxiomOSAgent:
         # Fallback for non-dict values
         return f"{key}: {str(value)[:120]}"
 
+    @traceable
     def _load_memory(self, state: AgentState) -> AgentState:
         """Load session and long-term memory"""
         # Load session memory from Redis
@@ -434,6 +437,7 @@ class AxiomOSAgent:
 
         return state
 
+    @traceable
     def _process_message(self, state: AgentState) -> AgentState:
         """Process messages and detect commands"""
         if not state.messages:
@@ -476,6 +480,7 @@ class AxiomOSAgent:
 
         return state
 
+    @traceable
     def _save_memory(self, state: AgentState) -> AgentState:
         """Save memory to Redis and PostgreSQL"""
         # Save session context to Redis (omit ephemeral keys)
