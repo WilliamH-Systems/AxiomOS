@@ -38,6 +38,10 @@ services:
       - key: GROQ_TEMPERATURE
         value: "0.7"
       
+      # Tavily API configuration
+      - key: TAVILY_API_KEY
+        sync: false
+      
       # PostgreSQL connection (auto from service)
       - key: DB_HOST
         fromDatabase:
