@@ -908,3 +908,225 @@ body::before {
         box-shadow: none;
     }
 }
+
+/* ===================================
+   GitHub-Flavored Markdown Styles
+   =================================== */
+
+.markdown-content {
+    line-height: 1.6;
+    color: var(--text-primary);
+    word-wrap: break-word;
+}
+
+/* Headings */
+.markdown-content h1,
+.markdown-content h2,
+.markdown-content h3,
+.markdown-content h4,
+.markdown-content h5,
+.markdown-content h6 {
+    margin-top: 1.5em;
+    margin-bottom: 0.75em;
+    font-weight: 600;
+    line-height: 1.25;
+    color: var(--primary-color);
+}
+
+.markdown-content h1 {
+    font-size: 1.8em;
+    border-bottom: 2px solid var(--glass-border);
+    padding-bottom: 0.5em;
+}
+
+.markdown-content h2 {
+    font-size: 1.5em;
+    border-bottom: 1px solid var(--glass-border);
+    padding-bottom: 0.3em;
+}
+
+.markdown-content h3 {
+    font-size: 1.3em;
+}
+
+.markdown-content h4 {
+    font-size: 1.1em;
+}
+
+.markdown-content h5 {
+    font-size: 1em;
+}
+
+.markdown-content h6 {
+    font-size: 0.9em;
+    color: var(--text-secondary);
+}
+
+/* Paragraphs */
+.markdown-content p {
+    margin-bottom: 1em;
+}
+
+/* Lists */
+.markdown-content ul,
+.markdown-content ol {
+    margin-bottom: 1em;
+    padding-left: 2em;
+}
+
+.markdown-content li {
+    margin-bottom: 0.25em;
+}
+
+.markdown-content ul li {
+    list-style-type: disc;
+}
+
+.markdown-content ol li {
+    list-style-type: decimal;
+}
+
+.markdown-content ul ul,
+.markdown-content ol ol,
+.markdown-content ul ol,
+.markdown-content ol ul {
+    margin-top: 0.25em;
+    margin-bottom: 0.25em;
+}
+
+/* Code blocks */
+.markdown-content code {
+    background: rgba(0, 0, 0, 0.2);
+    padding: 0.2em 0.4em;
+    border-radius: 3px;
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    font-size: 0.9em;
+    color: #e6f7ff;
+}
+
+.markdown-content pre {
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid var(--glass-border);
+    border-radius: 6px;
+    padding: 1em;
+    overflow-x: auto;
+    margin-bottom: 1em;
+}
+
+.markdown-content pre code {
+    background: none;
+    padding: 0;
+    border-radius: 0;
+    font-size: 0.9em;
+    line-height: 1.45;
+    color: var(--text-primary);
+}
+
+/* Blockquotes */
+.markdown-content blockquote {
+    margin: 1em 0;
+    padding: 0.5em 1.5em;
+    border-left: 4px solid var(--primary-color);
+    background: rgba(0, 212, 170, 0.1);
+    color: var(--text-secondary);
+    font-style: italic;
+}
+
+.markdown-content blockquote p {
+    margin-bottom: 0;
+}
+
+/* Tables */
+.markdown-content table {
+    border-collapse: collapse;
+    width: 100%;
+    margin-bottom: 1em;
+}
+
+.markdown-content th,
+.markdown-content td {
+    border: 1px solid var(--glass-border);
+    padding: 0.5em 1em;
+    text-align: left;
+}
+
+.markdown-content th {
+    background: rgba(255, 255, 255, 0.1);
+    font-weight: 600;
+}
+
+.markdown-content tr:nth-child(even) {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+/* Horizontal rules */
+.markdown-content hr {
+    border: none;
+    height: 2px;
+    background: var(--glass-border);
+    margin: 2em 0;
+}
+
+/* Links */
+.markdown-content a {
+    color: var(--primary-color);
+    text-decoration: none;
+    transition: color var(--transition-fast);
+}
+
+.markdown-content a:hover {
+    color: var(--secondary-color);
+    text-decoration: underline;
+}
+
+/* Strong and emphasis */
+.markdown-content strong {
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+.markdown-content em {
+    font-style: italic;
+    color: var(--text-secondary);
+}
+
+/* Task lists */
+.markdown-content .task-list-item {
+    list-style: none;
+    margin-left: -1.5em;
+}
+
+.markdown-content .task-list-item input {
+    margin-right: 0.5em;
+    margin-left: 0.5em;
+}
+
+/* Inline code highlighting for common languages */
+.markdown-content .highlight .hll { background: rgba(255, 255, 255, 0.1); }
+.markdown-content .highlight .c { color: #6a9955; font-style: italic; }
+.markdown-content .highlight .err { color: #f44747; }
+.markdown-content .highlight .k { color: #569cd6; }
+.markdown-content .highlight .s { color: #ce9178; }
+.markdown-content .highlight .n { color: #9cdcfe; }
+.markdown-content .highlight .o { color: #d4d4d4; }
+.markdown-content .highlight .p { color: #d4d4d4; }
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .markdown-content {
+        font-size: 0.9em;
+    }
+    
+    .markdown-content pre {
+        padding: 0.75em;
+        font-size: 0.8em;
+    }
+    
+    .markdown-content h1 {
+        font-size: 1.5em;
+    }
+    
+    .markdown-content h2 {
+        font-size: 1.3em;
+    }
+}

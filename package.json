@@ -1,0 +1,16 @@
+{
+  "name": "axiomos-frontend",
+  "version": "0.8.2",
+  "description": "Frontend dependencies for AxiomOS",
+  "main": "static/js/app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "marked": "^15.0.0",
+    "dompurify": "^3.3.1"
+  },
+  "keywords": ["markdown", "chat", "ai"],
+  "author": "AxiomOS",
+  "license": "MIT"
+}
