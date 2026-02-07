@@ -230,9 +230,11 @@ class AxiomOSAgent:
             state = self._command_delete(state)
         elif command == "clear":
             state = self._command_clear(state)
+        elif command == "help":
+            state = self._command_help(state)
         else:
             state.context["command_result"] = (
-                f"Unknown command '/{command}'. Available commands: /save, /recall, /delete, /clear."
+                f"Unknown command '/{command}'. Available commands: /save, /recall, /delete, /clear, /help."
             )
 
         # Skip automatic LLM reply and memory save for command interactions
@@ -373,6 +375,41 @@ class AxiomOSAgent:
 
             state.context.pop("needs_clear_confirmation", None)
 
+        return state
+
+    def _command_help(self, state: AgentState) -> AgentState:
+        """Show available commands and their descriptions"""
+        help_text = """
+🤖 **AxiomOS Available Commands:**
+
+**/save** - Save current conversation to long-term memory
+  Usage: /save
+  
+**/recall** - Retrieve saved memories from long-term memory
+  Usage: /recall [memory_key]
+  Examples: /recall (shows all memories)
+           /recall memory_20231201_143022 (shows specific memory)
+  
+**/delete** - Delete a specific memory from long-term memory
+  Usage: /delete <memory_key>
+  Example: /delete memory_20231201_143022
+  
+**/clear** - Clear all memories from long-term memory
+  Usage: /clear (shows confirmation)
+         /clear confirm (executes the clear operation)
+  ⚠️ This action cannot be undone!
+
+**/help** - Show this help message
+  Usage: /help
+
+💡 **Tips:**
+- Memories are stored with timestamps as keys
+- Use /recall first to see available memory keys
+- /save preserves your conversation context for future reference
+- All memory operations require user authentication
+        """.strip()
+        
+        state.context["command_result"] = help_text
         return state
 
     def _format_memory_preview(self, key: str, value: Any, include_details: bool = True) -> str:

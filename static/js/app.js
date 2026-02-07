@@ -242,9 +242,9 @@ class AxiomOSChat {
                                 this.finalizeMessage(assistantMessage);
                                 
                                 // Add memory context if applicable
-                                if (message.toLowerCase().includes('remember')) {
+                                if (message.toLowerCase().includes('/save')) {
                                     this.appendMessage(assistantMessage, '\n\n💾 *I\'ve saved this conversation to your long-term memory.*');
-                                } else if (message.toLowerCase().includes('recall')) {
+                                } else if (message.toLowerCase().includes('/recall')) {
                                     this.appendMessage(assistantMessage, '\n\n📋 *Retrieved from your memory banks.*');
                                 }
                             }

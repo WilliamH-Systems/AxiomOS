@@ -14,7 +14,13 @@ async def on_chat_start():
     await cl.Message(
         content="🤖 **AxiomOS** - Personal Assistant for Organizing Your Life\n\n"
         "I'm here to help you with intelligent conversations and remember important information. "
-        "Type `remember` followed by something you want me to save, or `recall` to retrieve memories.\n\n"
+        "Use slash commands for memory operations:\n\n"
+        "**Available Commands:**\n"
+        "- `/save` - Save conversation to memory\n"
+        "- `/recall` - Retrieve saved memories\n"
+        "- `/delete <memory_key>` - Delete specific memory\n"
+        "- `/clear` - Clear all memories\n"
+        "- `/help` - Show available commands\n\n"
         "I'm powered by Groq's fast LLM models and have both session and long-term memory capabilities.",
         author="AxiomOS",
     ).send()
@@ -168,10 +174,12 @@ async def show_help(action: cl.Action):
     help_content = """
     🤖 **AxiomOS Help**
     
-    **Commands:**
-    - `remember <information>` - Save information to long-term memory
-    - `recall` - Retrieve information from memory
-    - Regular conversation - I'll respond intelligently using Groq
+    **Slash Commands:**
+    - `/save` - Save current conversation to long-term memory
+    - `/recall [memory_key]` - Retrieve saved memories
+    - `/delete <memory_key>` - Delete a specific memory
+    - `/clear` - Clear all memories (requires `/clear confirm`)
+    - `/help` - Show this help message
     
     **Features:**
     - 🧠 Long-term memory storage
