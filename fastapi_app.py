@@ -410,10 +410,46 @@ async def get_user_memory(user_id: int):
 
 @app.get("/api/memories")
 async def api_get_memories(user_id: Optional[int] = 1):
-    """Get memories for frontend from actual database"""
+    """Get memories for frontend from both Redis (session) and PostgreSQL (long-term)"""
     try:
         from src.database import LongTermMemory
+        from src.redis_manager import redis_manager
+        import json
 
+        memory_data = []
+
+        # Get session memories from Redis
+        try:
+            # Get all session keys (this is a simplified approach)
+            # In a real implementation, you might want to track session IDs separately
+            session_keys = redis_manager.client.keys("session:*") if redis_manager.client else []
+            
+            for session_key in session_keys:
+                try:
+                    # Handle both string and bytes keys
+                    key_str = session_key.decode('utf-8') if isinstance(session_key, bytes) else session_key
+                    session_data = redis_manager.client.get(session_key)
+                    if session_data:
+                        session_info = json.loads(session_data) if isinstance(session_data, (str, bytes)) else session_data
+                        
+                        # Create a memory entry for session context
+                        if session_info.get('context'):
+                            memory_data.append({
+                                "id": f"session-{key_str}",
+                                "title": f"Session {key_str.replace('session:', '')}",
+                                "content": json.dumps(session_info['context'], indent=2),
+                                "type": "session",
+                                "category": "session",
+                                "created_at": datetime.now().isoformat(),
+                                "updated_at": datetime.now().isoformat()
+                            })
+                except Exception as e:
+                    print(f"Error processing session key {session_key}: {e}")
+                    continue
+        except Exception as e:
+            print(f"Error retrieving session memories: {e}")
+
+        # Get long-term memories from PostgreSQL
         db_session = db_manager.get_session()
         try:
             memories = (
@@ -424,7 +460,6 @@ async def api_get_memories(user_id: Optional[int] = 1):
             )
 
             # Transform database records to frontend format
-            memory_data = []
             for memory in memories:
                 # Extract category from key or use default
                 category = "general"
@@ -441,9 +476,13 @@ async def api_get_memories(user_id: Optional[int] = 1):
                     "updated_at": memory.updated_at.isoformat()
                 })
 
-            return memory_data
         finally:
             db_session.close()
+
+        # Sort by creation date (newest first)
+        memory_data.sort(key=lambda x: x['created_at'], reverse=True)
+        return memory_data
+        
     except Exception as e:
         print(f"Error retrieving memories: {e}")
         # Return empty list on error to avoid frontend breaking
@@ -506,43 +545,79 @@ async def api_export_memories(user_id: Optional[int] = 1):
 @app.delete("/api/memories/session")
 async def api_clear_session_memories():
     """Clear session memories"""
-    # Mock implementation
-    return {"message": "Session memories cleared successfully"}
+    try:
+        from src.redis_manager import redis_manager
+        
+        if redis_manager.client:
+            # Get all session keys
+            session_keys = redis_manager.client.keys("session:*")
+            
+            # Delete all session keys
+            if session_keys:
+                redis_manager.client.delete(*session_keys)
+                return {"message": f"Cleared {len(session_keys)} session memories"}
+            else:
+                return {"message": "No session memories found"}
+        else:
+            return {"message": "Redis not available - no session memories to clear"}
+            
+    except Exception as e:
+        print(f"Error clearing session memories: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to clear session memories: {str(e)}")
 
 
 @app.delete("/api/memories/{memory_id}")
 async def api_delete_memory(memory_id: str, user_id: Optional[int] = 1):
-    """Delete a specific memory from database"""
+    """Delete a specific memory from database or Redis"""
     try:
         from src.database import LongTermMemory
+        from src.redis_manager import redis_manager
 
-        # Extract numeric ID from memory_id (format: "mem-{id}")
-        if not memory_id.startswith("mem-"):
-            raise HTTPException(status_code=400, detail="Invalid memory ID format")
+        # Handle session memory deletion (format: "session-{session_key}")
+        if memory_id.startswith("session-"):
+            # Extract the actual Redis key from memory_id
+            # memory_id format: "session-session:xyz" -> Redis key: "session:xyz"
+            session_key = memory_id.replace("session-", "", 1)  # Only replace first occurrence
+            
+            if redis_manager.client:
+                # Delete specific session key
+                result = redis_manager.client.delete(session_key)
+                if result:
+                    return {"message": "Session memory deleted successfully"}
+                else:
+                    raise HTTPException(status_code=404, detail="Session memory not found")
+            else:
+                raise HTTPException(status_code=500, detail="Redis not available")
         
-        try:
-            db_memory_id = int(memory_id.split("-")[1])
-        except (IndexError, ValueError):
-            raise HTTPException(status_code=400, detail="Invalid memory ID format")
+        # Handle long-term memory deletion (format: "mem-{id}")
+        elif memory_id.startswith("mem-"):
+            try:
+                db_memory_id = int(memory_id.split("-")[1])
+            except (IndexError, ValueError):
+                raise HTTPException(status_code=400, detail="Invalid memory ID format")
 
-        db_session = db_manager.get_session()
-        try:
-            # Find and delete the memory
-            memory = (
-                db_session.query(LongTermMemory)
-                .filter(LongTermMemory.id == db_memory_id, LongTermMemory.user_id == user_id)
-                .first()
-            )
+            db_session = db_manager.get_session()
+            try:
+                # Find and delete memory
+                memory = (
+                    db_session.query(LongTermMemory)
+                    .filter(LongTermMemory.id == db_memory_id, LongTermMemory.user_id == user_id)
+                    .first()
+                )
+                
+                if not memory:
+                    raise HTTPException(status_code=404, detail="Memory not found")
+                
+                db_session.delete(memory)
+                db_session.commit()
+                
+                return {"message": "Long-term memory deleted successfully"}
+                
+            finally:
+                db_session.close()
+        else:
+            raise HTTPException(status_code=400, detail="Invalid memory ID format")
             
-            if not memory:
-                raise HTTPException(status_code=404, detail="Memory not found")
-            
-            db_session.delete(memory)
-            db_session.commit()
-            
-            return {"message": f"Memory {memory_id} deleted successfully"}
-        finally:
-            db_session.close()
     except HTTPException:
         raise
     except Exception as e:

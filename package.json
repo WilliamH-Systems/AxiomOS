@@ -1,6 +1,6 @@
 {
   "name": "axiomos-frontend",
-  "version": "0.8.3",
+  "version": "0.10.3",
   "description": "Frontend dependencies for AxiomOS",
   "main": "static/js/app.js",
   "scripts": {
