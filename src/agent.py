@@ -544,28 +544,8 @@ class AxiomOSAgent:
             state.context.pop("skip_memory_save", None)
             return state
 
-        # Auto-save conversations after every few messages
-        if state.user_id and len(state.messages) >= 2:  # Save after at least 2 messages
-            db_session = db_manager.get_session()
-            try:
-                memory_key = f"conversation_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
-                # Save all messages with proper formatting
-                memory_value = {
-                    "messages": state.messages if len(state.messages) > 0 else [],
-                    "context": state.context,
-                    "auto_saved": True,
-                }
-
-                new_memory = DBMemory(
-                    user_id=state.user_id,
-                    key=memory_key,
-                    value=json.dumps(memory_value),
-                )
-                db_session.add(new_memory)
-                db_session.commit()
-
-            finally:
-                db_session.close()
+        # Auto-save is disabled - session data is handled by Redis above
+        # Only explicit remember commands should save to long-term memory
 
         # Save important data to long-term memory (explicit remember command)
         if state.user_id and state.context.get("processing_remember"):
